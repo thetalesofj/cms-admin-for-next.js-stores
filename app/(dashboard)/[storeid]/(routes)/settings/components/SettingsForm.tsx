@@ -23,7 +23,7 @@ interface SettingsFormProps {
 }
 
 const formSchema = z.object({
-    name: z.string().min(1)
+    name: z.string().min(2)
 })
 
 type SettingsFormValues = z.infer<typeof formSchema>
@@ -63,7 +63,7 @@ const SettingsForm : React.FC<SettingsFormProps> = ({
             router.refresh();
             router.push("/")
             toast.success("Store Deleted.")
-        } catch (error) {
+        } catch (error : any) {
             toast.error("Make Sure You Have Removed All Products and Categories First.")
         } finally {
             setLoading(false);
@@ -76,7 +76,7 @@ const SettingsForm : React.FC<SettingsFormProps> = ({
         <AlertModal 
         isOpen={open}
         onClose={() => setOpen(false)}
-        onConfirm={() => {}}
+        onConfirm={onDelete}
         loading={loading}
         />
             <div className="flex items-center justify-between">
@@ -86,7 +86,7 @@ const SettingsForm : React.FC<SettingsFormProps> = ({
                 />
                 <Button
                     variant="destructive"
-                    size="icon"
+                    size="sm"
                     onClick={() => setOpen(true)}
                     disabled={loading}
                 >
@@ -123,7 +123,7 @@ const SettingsForm : React.FC<SettingsFormProps> = ({
             </Form>
             <Separator />
             <ApiAlert 
-                title="test"
+                title="NEXT_PUBLIC_API_URL"
                 description={`${origin}/api/${params.storeId}`}
                 variant="public"
             />

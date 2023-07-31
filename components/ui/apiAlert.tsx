@@ -9,17 +9,17 @@ import { toast } from "react-hot-toast";
 interface ApiAlertProps {
     title: string,
     description: string,
-    variant:"public" | "admin"
+    variant:"public" | "admin",
 }
 
 const textMap: Record<ApiAlertProps["variant"], string> = {
     public: "Public",
-    admin: "Admin"
+    admin: "Admin",
 }
 
 const variantMap: Record<ApiAlertProps["variant"], BadgeProps["variant"]> = {
     public: "secondary",
-    admin: "destructive"
+    admin: "destructive",
 };
 
 export const ApiAlert: React.FC<ApiAlertProps> = ({
@@ -29,7 +29,7 @@ export const ApiAlert: React.FC<ApiAlertProps> = ({
 }) => {
     const onCopy = () => {
         navigator.clipboard.writeText(description);
-        toast.success("API Route Copied To The Clipboards")
+        toast.success("API Route Copied To Clipboards")
     }
     return (
         <Alert>

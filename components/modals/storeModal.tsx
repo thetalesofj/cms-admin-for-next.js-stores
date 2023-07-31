@@ -25,7 +25,7 @@ const [loading, setLoading] = useState(false)
 const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        name: ""
+        name: "",
     }
 })
 
@@ -35,7 +35,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
         
         const response = await axios.post('/api/stores', values);
         
-        window.location.assign(`${response.data.id}`)
+        window.location.assign(`/${response.data.id}`)
 
     } catch(error) {
         toast.error("Something went wrong")

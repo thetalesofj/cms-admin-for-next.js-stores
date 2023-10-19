@@ -1,14 +1,12 @@
 'use client'
 
 import { AlertModal } from "@/components/modals/AlertModal";
-import { ApiAlert } from "@/components/ui/apiAlert";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Heading from "@/components/ui/heading";
 import { ImageUpload } from "@/components/ui/imageUpload";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useOrigin } from "@/hooks/useOrigin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Billboard } from "@prisma/client";
 import axios from "axios";
@@ -36,7 +34,6 @@ const BillboardForm : React.FC<BillboardFormProps> = ({
 
     const params = useParams();
     const router = useRouter();
-    const origin = useOrigin();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -76,7 +73,7 @@ const BillboardForm : React.FC<BillboardFormProps> = ({
             setLoading(true)
             await axios.delete(`/api/${params.storeId}/billboards/${params.billboardId}`);
             router.refresh();
-            router.push("/")
+            router.push(`/${params.storeId}/billboards`)
             toast.success("Billboard Deleted.")
         } catch (error : any) {
             toast.error("Make Sure You Have Removed All Categories Using This Billboard First.")
@@ -156,7 +153,6 @@ const BillboardForm : React.FC<BillboardFormProps> = ({
                     </Button>
                 </form>
             </Form>
-            <Separator />
         </>
      );
 }

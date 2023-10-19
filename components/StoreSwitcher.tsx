@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from "react"
+import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useStoreModal } from "@/hooks/useStoreModal";
 import { Store } from "@prisma/client"
@@ -47,7 +48,7 @@ export default function StoreSwitcher({
     const currentStore = formattedItems.find((item) => 
         item.value === params.storeId);
 
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
 
     const onStoreSelect = (store: {value: string, label: string}) => {
         setOpen(false);

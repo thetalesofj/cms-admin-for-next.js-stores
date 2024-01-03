@@ -20,7 +20,7 @@ const BillboardsPage = async ({
     const formattedBillboards: BillboardColumn[] = billboards.map((item) => ({
         id: item.id,
         label: item.label,
-        createdAt: format(item.createdAt, "do MMMM, yyyy"),
+        createdAt: format(item.createdAt, "do MMMM yyyy"),
     }))
     return ( 
         <div className="flex-col">

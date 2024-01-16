@@ -3,7 +3,12 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export function MainNav({
   className,
@@ -14,66 +19,69 @@ export function MainNav({
 
   const routes = [
     {
-      href: `/${params.storeId}`,
+      href: `/${params.store_id}`,
       label: "Dashboard",
-      active: pathname === `/${params.storeId}`,
+      active: pathname === `/${params.store_id}`,
     },
     {
-      href: `/${params.storeId}/orders`,
+      href: `/${params.store_id}/orders`,
       label: "Orders",
-      active: pathname === `/${params.storeId}/orders`,
+      active: pathname === `/${params.store_id}/orders`,
     },
   ];
 
   const settings = [
     {
-      href: `/${params.storeId}/settings`,
+      href: `/${params.store_id}/settings`,
       label: "Settings",
-      active: pathname === `/${params.storeId}/settings`,
-    }
-  ]
+      active: pathname === `/${params.store_id}/settings`,
+    },
+  ];
 
   const storeRoutes = [
     {
-      href: `/${params.storeId}/billboards`,
+      href: `/${params.store_id}/billboards`,
       label: "Billboards",
-      active: pathname === `/${params.storeId}/billboards`,
+      active: pathname === `/${params.store_id}/billboards`,
     },
     {
-      href: `/${params.storeId}/categories`,
+      href: `/${params.store_id}/categories`,
       label: "Categories",
-      active: pathname === `/${params.storeId}/categories`,
+      active: pathname === `/${params.store_id}/categories`,
     },
     {
-      href: `/${params.storeId}/sub-categories`,
+      href: `/${params.store_id}/sub-categories`,
       label: "Sub-Categories",
-      active: pathname === `/${params.storeId}/sub-categories`,
+      active: pathname === `/${params.store_id}/sub-categories`,
     },
     {
-      href: `/${params.storeId}/brands`,
+      href: `/${params.store_id}/brands`,
       label: "Brands",
-      active: pathname === `/${params.storeId}/brands`,
+      active: pathname === `/${params.store_id}/brands`,
     },
     {
-      href: `/${params.storeId}/sizes`,
+      href: `/${params.store_id}/sizes`,
       label: "Sizes",
-      active: pathname === `/${params.storeId}/sizes`,
+      active: pathname === `/${params.store_id}/sizes`,
     },
     {
-      href: `/${params.storeId}/colours`,
+      href: `/${params.store_id}/colours`,
       label: "Colours",
-      active: pathname === `/${params.storeId}/colours`,
+      active: pathname === `/${params.store_id}/colours`,
     },
     {
-      href: `/${params.storeId}/products`,
+      href: `/${params.store_id}/products`,
       label: "Products",
-      active: pathname === `/${params.storeId}/products`,
+      active: pathname === `/${params.store_id}/products`,
     },
   ];
 
   return (
     <nav
-      className={cn("flex items-center justify-between space-x-4 lg:space-x-6", className)}
+      className={cn(
+        "flex items-center justify-between space-x-4 lg:space-x-6",
+        className
+      )}
       {...props}
     >
       {routes.map((route) => (
@@ -90,36 +98,35 @@ export function MainNav({
           {route.label}
         </Link>
       ))}
-        <DropdownMenu>
-          <DropdownMenuTrigger
+      <DropdownMenu>
+        <DropdownMenuTrigger
           className={cn(
-            "text-sm text-muted-foreground font-medium transition-colors hover:text-primary",
+            "text-sm text-muted-foreground font-medium transition-colors hover:text-primary"
           )}
-          >Explore</DropdownMenuTrigger>
-            <DropdownMenuContent>
-              
-                {storeRoutes.map((route) => {
-                  return (
-                    <DropdownMenuItem
-                    key={route.href}
-                    >
-                      <Link
-                      href={route.href}
-                      className={cn(
-                          "my-1 text-sm font-medium transition-colors hover:text-primary",
-                          route.active
-                          ? "text-black dark:text-white"
-                          : "text-muted-foreground"
-                          )}
-                            >
-                        {route.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {settings.map((route) => (
+        >
+          Explore
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          {storeRoutes.map((route) => {
+            return (
+              <DropdownMenuItem key={route.href}>
+                <Link
+                  href={route.href}
+                  className={cn(
+                    "my-1 text-sm font-medium transition-colors hover:text-primary",
+                    route.active
+                      ? "text-black dark:text-white"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {route.label}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {settings.map((route) => (
         <Link
           key={route.href}
           href={route.href}
@@ -132,7 +139,7 @@ export function MainNav({
         >
           {route.label}
         </Link>
-        ))}
+      ))}
     </nav>
   );
 }

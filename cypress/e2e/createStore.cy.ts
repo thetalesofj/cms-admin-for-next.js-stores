@@ -1,6 +1,6 @@
 describe("Signed in and creating store", () => {
 
-  let storeId: string;
+  let store_id: string;
   
   beforeEach(() => {
     cy.session('signed-in', () => {
@@ -23,7 +23,7 @@ describe("Signed in and creating store", () => {
     // extract store ID from url
     cy.url().should('include', '/').then(($url) => {
       const urlParts = $url.split('/');
-      storeId = urlParts[urlParts.length - 1];
+      store_id = urlParts[urlParts.length - 1];
     })
 
     // Navigate to settings and change store name
@@ -37,16 +37,16 @@ describe("Signed in and creating store", () => {
   });
 
   it("should verify the store ID in the URL", () => {
-    // Validate that storeId is not undefined
-    expect(storeId).to.exist;
+    // Validate that store_id is not undefined
+    expect(store_id).to.exist;
     
     // Visit the URL with the extracted store ID
     cy.session('signed-in', () => {
-      cy.visit(`http://localhost:3000/${storeId}`);
+      cy.visit(`http://localhost:3000/${store_id}`);
     });
 
     // Validate that the store ID in the URL is correct
-    cy.url().should('include', `/${storeId}`);
+    cy.url().should('include', `/${store_id}`);
   });
 
  // it("should delete store", () => {

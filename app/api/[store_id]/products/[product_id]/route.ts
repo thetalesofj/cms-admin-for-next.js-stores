@@ -18,7 +18,11 @@ export async function GET (
             include: {
                 images: true,
                 category: true,
-                size: true,
+                size: {
+                    include: {
+                        product_sizes: true,
+                    }
+                },
                 colour: true,
                 brand: true,
             }
@@ -39,7 +43,7 @@ export async function PATCH (
     try {
         const { userId } = auth();
         const body = await req.json();
-        const { name, brandId, price, discountRate, category_id, subcategory_id, style_id, colour_id, size_id, images, isFeatured, isDiscounted, isArchived } = body
+        const { name, brand_id, price, discount_rate, category_id, style_id, colour_id, size_id, images, is_featured, is_discounted, is_archived, sizeQuantities } = body
 
         if (!userId) {
             return new NextResponse("Unauthenticated", { status : 403})
@@ -47,16 +51,13 @@ export async function PATCH (
         if (!name) {
             return new NextResponse("Name Required", { status: 400 })
         }
-        if (!brandId) {
+        if (!brand_id) {
             return new NextResponse("Brand Required", { status: 400 })
         }
         if (!price) {
             return new NextResponse("Price Required", { status: 400 })
         }
         if (!category_id) {
-            return new NextResponse("Category ID Required", { status: 400 })
-        }
-        if (!subcategory_id) {
             return new NextResponse("Category ID Required", { status: 400 })
         }
         if (!style_id) {
@@ -90,24 +91,46 @@ export async function PATCH (
             name,
             price,
             category_id,
-            subcategory_id,
             style_id,
             colour_id,
-            brandId,
+            brand_id,
             size_id,
+            size: {
+                update: {
+                  product_sizes: {
+                    deleteMany: {},
+                    createMany: {
+                      data: sizeQuantities.map((index: { size_id: string; quantity: number }) => ({
+                        size: { connect: { id: index.size_id } },
+                        quantity: index.quantity,
+                      })),
+                    },
+                  },
+                },
+              },
             images: {
               deleteMany: {},
             },
-            isFeatured,
-            isArchived,
-            isDiscounted,
+            is_featured,
+            is_archived,
+            is_discounted,
           };
-      
-          // Only add discountRate to updateData if it is provided
-          if (typeof discountRate !== 'undefined') {
-            updateData.discountRate = discountRate;
-            console.log('discountRate before update:', discountRate);
+      console.log(updateData)
+          // Only add discount_rate to updateData if it is provided
+          if (typeof discount_rate !== 'undefined') {
+            updateData.discount_rate = discount_rate;
+            console.log('discount_rate before update:', discount_rate);
           } 
+
+          if (sizeQuantities && sizeQuantities.length > 0) {
+            updateData.size.product_sizes = {
+              upsert: sizeQuantities.map((index: { size_id: string; quantity: number; }) => ({
+                where: { size_id: index.size_id, product_id: params.product_id },
+                create: { size_id: index.size_id, quantity: index.quantity },
+                update: { quantity: index.quantity },
+              })),
+            };
+          }
 
         await prismadb.product.update({
             where: {
@@ -164,7 +187,7 @@ export async function DELETE (
             return new NextResponse("Unauthorised", { status: 403 })
         }
 
-        const product = await prismadb.product.deleteMany({
+        const product = await prismadb.product.delete({
             where: {
                 id: params.product_id,
             }

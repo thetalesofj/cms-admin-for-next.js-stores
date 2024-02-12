@@ -8,18 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
-import { StyleColumn } from "./columns";
+import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+
+import { ModalColumn } from "./columns";
 import toast from "react-hot-toast";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
-
-import { AlertModal } from "@/components/modals/AlertModal";
-import { StyleModal } from "@/components/modals/styleModal";
+import { AlertModal } from "@/components/modals/alert-modal";
 
 interface CellActionProps {
-  data: StyleColumn;
+  data: ModalColumn;
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -29,15 +28,20 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
+  const onCopy = (id: string) => {
+    navigator.clipboard.writeText(id);
+    toast.success("Modal ID Copied To Clipboards");
+  };
+
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${params.store_id}/sub-categories/${data.id}`);
+      await axios.delete(`/api/${params.store_id}/modals/${data.id}`);
       router.refresh();
-      toast.success("Style Deleted.");
+      toast.success("Modal Deleted.");
     } catch (error: any) {
       toast.error(
-        "Make Sure You Have Removed All Products Using This Style First."
+        "Make Sure You Have Removed All Categories Using This Size First."
       );
     } finally {
       setLoading(false);
@@ -64,7 +68,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => <StyleModal data={data.styleName} />}>
+          <DropdownMenuItem onClick={() => onCopy(data.id)}>
+            <Copy className="mr-2 h-4 w-4" />
+            Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push(`/${params.store_id}/modals/${data.id}`)}
+          >
             <Edit className="mr-2 h-4 w-4" />
             Update
           </DropdownMenuItem>

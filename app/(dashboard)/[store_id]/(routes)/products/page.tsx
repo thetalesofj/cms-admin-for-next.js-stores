@@ -21,21 +21,22 @@ const ProductsPage = async ({ params }: { params: { store_id: string } }) => {
   });
   const formattedProducts: ProductColumn[] = products.map((item) => {
     const discountRateValue =
-      item.discountRate.toNumber() !== null
+      item.discount_rate.toNumber() !== null
         ? formatter.format(
-            (item.price.toNumber() / 100) * (100 - item.discountRate.toNumber())
+            (item.price.toNumber() / 100) *
+              (100 - item.discount_rate.toNumber())
           )
         : null;
     return {
       id: item.id,
       name: item.name,
       brand: item.brand.name,
-      isFeatured: item.isFeatured,
-      isArchived: item.isArchived,
-      isDiscounted: item.isDiscounted,
+      is_featured: item.is_featured,
+      is_archived: item.is_archived,
+      is_discounted: item.is_discounted,
       category: item.category.name,
       price: formatter.format(item.price.toNumber()),
-      discountRate: discountRateValue,
+      discount_rate: discountRateValue,
       size: item.size.name,
       colour: item.colour.value,
       createdAt: format(item.createdAt, "do MMMM yyyy"),

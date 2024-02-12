@@ -2,9 +2,12 @@
 
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useStoreModal } from "@/hooks/useStoreModal";
-import { Modal } from "@/components/ui/modal";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useParams } from "next/navigation";
+
 import {
   Form,
   FormControl,
@@ -15,32 +18,39 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import axios from "axios";
-import { toast } from "react-hot-toast";
+
+import { Modal } from "@/components/ui/modal";
 
 const formSchema = z.object({
-  name: z.string().min(1),
+  style: z.string().min(1),
 });
 
-export const StoreModal = () => {
-  const storeModal = useStoreModal();
+interface StyleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (values: z.infer<typeof formSchema>) => void;
+}
 
+export const StyleModal: React.FC <StyleModalProps> = ({ isOpen, onClose, onSave }) => {
+  
+  const params = useParams();
   const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      style: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-
-      const response = await axios.post("/api/stores", values);
-
+      const response = await axios.post(
+        `/api/${params.store_id}/sub-categories/${params.subcategory_id}`,
+        values
+      );
+      toast.success("Style Updated!");
       window.location.assign(`/${response.data.id}`);
     } catch (error) {
       toast.error("Something Went Wrong");
@@ -51,10 +61,10 @@ export const StoreModal = () => {
 
   return (
     <Modal
-      title="Create Store"
-      description="Add a new store to manage products and categories"
-      isOpen={storeModal.isOpen}
-      onClose={storeModal.onClose}
+      title="Edit Style Name"
+      description="Enter the new name for the style below and click 'Save' to apply these changes"
+      isOpen={isOpen}
+      onClose={onClose}
     >
       <div>
         <div className="space-y-4 py-2 pb-4">
@@ -62,17 +72,12 @@ export const StoreModal = () => {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
-                name="name"
+                name="style"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input
-                        data-cy="store-name-input"
-                        disabled={loading}
-                        placeholder="E-Commerce"
-                        {...field}
-                      />
+                      <Input disabled={loading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -82,16 +87,12 @@ export const StoreModal = () => {
                 <Button
                   disabled={loading}
                   variant="outline"
-                  onClick={storeModal.onClose}
+                  onClick={onClose}
                 >
                   Cancel
                 </Button>
-                <Button
-                  disabled={loading}
-                  type="submit"
-                  data-cy="continue-store-button"
-                >
-                  Continue
+                <Button disabled={loading} type="submit">
+                  Save
                 </Button>
               </div>
             </form>

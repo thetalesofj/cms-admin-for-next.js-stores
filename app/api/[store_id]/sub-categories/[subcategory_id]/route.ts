@@ -14,7 +14,10 @@ export async function GET (
         const subCategory = await prismadb.subCategory.findUnique({
             where: {
                 id: params.subcategory_id,
-            }
+            },
+            include: {
+                styles: true,
+            },
         });
 
         return NextResponse.json(subCategory)
@@ -32,7 +35,7 @@ export async function PATCH (
     try {
         const { userId } = auth();
         const body = await req.json();
-        const { name, category_id } = body
+        const { name, category_id, styles } = body
 
         if (!userId) {
             return new NextResponse("Unauthenticated", { status : 403})
@@ -65,8 +68,16 @@ export async function PATCH (
             },
             data: {
                 name,
-                category_id
-            }
+                category_id,
+                styles: {
+                    updateMany: {
+                        data: styles.map((style: string) => ({ name: style })),
+                    },
+                },
+              },
+              include: {
+                styles: true,
+              },
         })
 
         return NextResponse.json(subCategory)
@@ -102,7 +113,7 @@ export async function DELETE (
             return new NextResponse("Unauthorised", { status: 403 })
         }
 
-        const subCategory = await prismadb.category.deleteMany({
+        const subCategory = await prismadb.subCategory.deleteMany({
             where: {
                 id: params.subcategory_id,
             }

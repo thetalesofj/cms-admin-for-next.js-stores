@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
-import { AlertModal } from "@/components/modals/AlertModal";
+import { AlertModal } from "@/components/modals/alert-modal";
 
 interface CellActionProps {
   data: ColourColumn;

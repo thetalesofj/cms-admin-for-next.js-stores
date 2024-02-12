@@ -23,6 +23,7 @@ model Store {
   styles         Style[]       @relation("StoreToStyle")
   products       Product[]     @relation("StoreToProduct")
   order          Order[]       @relation("StoreToOrder")
+  modal          Modal[]       @relation("StoreToModal")
 }
 
 model Billboard {
@@ -55,47 +56,81 @@ model Category {
 }
 
 model SubCategory {
-  id                String             @id @default(uuid())
-  name              String
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  store_id          String
-  category_id       String
-  category          Category           @relation("CategoryToSubCategory", fields: [category_id], references: [id])
-  store             Store              @relation("StoreToSubCategory", fields: [store_id], references: [id])
-  products          Product[]          @relation("SubCategoryToProduct")
-  styles            Style[]            @relation("SubCategoryToStyle")
+  id          String    @id @default(uuid())
+  name        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  store_id    String
+  category_id String
+  category    Category  @relation("CategoryToSubCategory", fields: [category_id], references: [id])
+  store       Store     @relation("StoreToSubCategory", fields: [store_id], references: [id])
+  products    Product[] @relation("SubCategoryToProduct")
+  styles      Style[]   @relation("SubCategoryToStyle")
 
   @@index([store_id])
   @@index([category_id])
 }
 
 model Style {
-  id             String        @id @default(uuid())
+  id             String      @id @default(uuid())
   name           String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   store_id       String
   subcategory_id String
-  subcategory    SubCategory   @relation("SubCategoryToStyle", fields: [subcategory_id], references: [id])
-  store          Store         @relation("StoreToStyle", fields: [store_id], references: [id])
-  products       Product[]     @relation("StyleToProduct")
+  subcategory    SubCategory @relation("SubCategoryToStyle", fields: [subcategory_id], references: [id])
+  store          Store       @relation("StoreToStyle", fields: [store_id], references: [id])
+  products       Product[]   @relation("StyleToProduct")
 
   @@index([subcategory_id])
   @@index([store_id])
 }
 
-model Size {
-  id        String    @id @default(uuid())
-  store_id  String
-  name      String
-  value     String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  store     Store     @relation("StoreToSize", fields: [store_id], references: [id])
-  products  Product[]
+model Modal {
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  isPublished          Boolean  @default(false)
+  store_id             String
+  link                 String
+  name                 String
+  location             String
+  image_url            String
+  description          String
+  terms_and_conditions String
+  title                String
+  isImagePublished     Boolean  @default(false)
+  store                Store    @relation("StoreToModal", fields: [store_id], references: [id])
 
   @@index([store_id])
+}
+
+model Size {
+  id            String        @id @default(uuid())
+  store_id      String
+  name          String
+  value         String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  store         Store         @relation("StoreToSize", fields: [store_id], references: [id])
+  products      Product[]
+  product_sizes ProductSize[]
+
+  @@index([store_id])
+}
+
+model ProductSize {
+  id         String   @id @default(uuid())
+  product_id String
+  size_id    String
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  size       Size     @relation(fields: [size_id], references: [id])
+
+  @@index([product_id])
+  @@index([size_id])
 }
 
 model Brand {
@@ -124,29 +159,30 @@ model Colour {
 }
 
 model Product {
-  id             String      @id @default(uuid())
+  id             String        @id @default(uuid())
   store_id       String
   category_id    String
   subcategory_id String
   style_id       String
   size_id        String
   colour_id      String
-  brandId        String
+  brand_id       String
   name           String
   price          Decimal
-  isFeatured     Boolean     @default(false)
-  isArchived     Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  isDiscounted   Boolean     @default(false)
-  discountRate   Decimal
-  store          Store       @relation("StoreToProduct", fields: [store_id], references: [id])
-  category       Category    @relation("CategoryToProduct", fields: [category_id], references: [id])
-  subCategory    SubCategory @relation("SubCategoryToProduct", fields: [subcategory_id], references: [id])
-  style          Style       @relation("StyleToProduct", fields: [style_id], references: [id])
-  size           Size        @relation(fields: [size_id], references: [id])
-  colour         Colour      @relation(fields: [colour_id], references: [id])
-  brand          Brand       @relation(fields: [brandId], references: [id])
+  is_featured    Boolean       @default(false)
+  is_archived    Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  is_discounted  Boolean       @default(false)
+  discount_rate  Decimal
+  product_size   ProductSize[]
+  store          Store         @relation("StoreToProduct", fields: [store_id], references: [id])
+  category       Category      @relation("CategoryToProduct", fields: [category_id], references: [id])
+  subCategory    SubCategory   @relation("SubCategoryToProduct", fields: [subcategory_id], references: [id])
+  style          Style         @relation("StyleToProduct", fields: [style_id], references: [id])
+  size           Size          @relation(fields: [size_id], references: [id])
+  colour         Colour        @relation(fields: [colour_id], references: [id])
+  brand          Brand         @relation(fields: [brand_id], references: [id])
   images         Image[]
   orderItems     OrderItem[]
 
@@ -156,7 +192,7 @@ model Product {
   @@index([subcategory_id])
   @@index([style_id])
   @@index([colour_id])
-  @@index([brandId])
+  @@index([brand_id])
   @@index([size_id])
 }
 
@@ -194,13 +230,4 @@ model OrderItem {
 
   @@index([order_id])
   @@index([product_id])
-}
-
-model StyleToSubCategory {
-  A String
-  B String
-
-  @@unique([A, B], map: "_StyleToSubCategory_AB_unique")
-  @@index([B], map: "_StyleToSubCategory_B_index")
-  @@map("_StyleToSubCategory")
 }

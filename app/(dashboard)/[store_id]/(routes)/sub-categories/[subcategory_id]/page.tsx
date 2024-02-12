@@ -1,10 +1,10 @@
 import prismadb from "@/lib/prismadb";
-import SubCategoryForm from "./components/SubCategoryForm";
+import SubCategoryForm from "./components/subcategory-form";
 
 const SubCategoryPage = async ({
   params,
 }: {
-  params: { subcategory_id: string; store_id: string; style_id: string };
+  params: { subcategory_id: string; store_id: string };
 }) => {
   const subCategory = await prismadb.subCategory.findUnique({
     where: {
@@ -14,20 +14,6 @@ const SubCategoryPage = async ({
       styles: true,
     },
   });
-
-  {
-    /*const style = await prismadb.style.findUnique({
-        where: {
-            id: params.style_id
-        },
-        include: {
-            subCategory: true
-        }
-    })*/
-  }
-  {
-    /*styleData={style}*/
-  }
 
   const categories = await prismadb.category.findMany({
     where: {

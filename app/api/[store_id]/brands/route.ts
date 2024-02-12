@@ -36,7 +36,7 @@ export async function POST(
             return new NextResponse("Unauthorised", { status: 403 })
         }
 
-        const  brand = await prismadb.brand.create({
+        const brand = await prismadb.brand.create({
             data: {
                 name,
                 store_id: params.store_id

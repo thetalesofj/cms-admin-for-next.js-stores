@@ -10,8 +10,8 @@ export async function POST(
 
         const body = await req.json()
         const { userId } = auth();
-        const { name, price, discountRate, category_id, style_id, subcategory_id, colour_id, size_id, brandId, images, isFeatured, isDiscounted, isArchived } = body
-        
+        const { name, price, discount_rate, category_id, style_id, colour_id, size_id, subcategory_id, brand_id, images, is_featured, is_discounted, is_archived, sizeQuantities } = body
+        console.log('[POST Request Body]', body);
 
         if (!userId) {
             return new NextResponse("Unauthenticated", { status: 401 })
@@ -25,13 +25,10 @@ export async function POST(
         if (!category_id) {
             return new NextResponse("Category ID Required", { status: 400 })
         }
-        if (!subcategory_id) {
-            return new NextResponse("Category ID Required", { status: 400 })
-        }
         if (!style_id) {
             return new NextResponse("Category ID Required", { status: 400 })
         }
-        if (!brandId) {
+        if (!brand_id) {
             return new NextResponse("Brand Required", { status: 400 })
         }
         if (!images?.length) {
@@ -39,6 +36,9 @@ export async function POST(
         }
         if (!size_id) {
             return new NextResponse("Size ID Required", { status: 400 })
+        }
+        if (!sizeQuantities) {
+            return new NextResponse("Size ID and Quantity Required", { status: 400 })
         }
         if (!colour_id) {
             return new NextResponse("Colour ID Required", { status: 400 })
@@ -62,13 +62,21 @@ export async function POST(
             data: {
                 name, 
                 price, 
-                discountRate,
+                discount_rate,
                 category_id, 
                 style_id,
-                subcategory_id,
                 colour_id, 
+                subcategory_id,
                 size_id,
-                brandId,
+                product_size: { 
+                    createMany: {
+                      data: sizeQuantities.map((index: { size_id: string; quantity: number; }) => ({
+                        size_id: index.size_id,
+                        quantity: index.quantity,
+                      })),
+                    },
+                  },
+                brand_id,
                 images: {
                     createMany: {
                         data: [
@@ -76,9 +84,9 @@ export async function POST(
                         ]
                     }
                 }, 
-                isFeatured, 
-                isArchived,
-                isDiscounted,
+                is_featured, 
+                is_archived,
+                is_discounted,
                 store_id: params.store_id
             }
         });
@@ -98,13 +106,12 @@ export async function GET(
 
         const { searchParams } = new URL(req.url);
         const category_id = searchParams.get("category_id") ?? undefined;
-        const subcategory_id = searchParams.get("subcategory_id") ?? undefined;
         const style_id = searchParams.get("style_id") ?? undefined;
         const size_id = searchParams.get("size_id") ?? undefined;
         const colour_id = searchParams.get("colour_id") ?? undefined;
-        const brandId = searchParams.get("brandId") ?? undefined;
-        const isFeatured = searchParams.get("isFeatured");
-        const isDiscounted = searchParams.get("isDiscounted");
+        const brand_id = searchParams.get("brand_id") ?? undefined;
+        const is_featured = searchParams.get("is_featured");
+        const is_discounted = searchParams.get("is_discounted");
 
         if (!params.store_id) {
             return new NextResponse("Store ID Required", { status: 400 });
@@ -114,20 +121,23 @@ export async function GET(
             where: {
                 store_id: params.store_id,
                 category_id,
-                subcategory_id,
                 style_id,
                 colour_id,
                 size_id,
-                brandId,
-                isFeatured: isFeatured ? true : undefined,
-                isDiscounted: isDiscounted ? true : undefined,
-                isArchived: false,
+                brand_id,
+                is_featured: is_featured ? true : undefined,
+                is_discounted: is_discounted ? true : undefined,
+                is_archived: false,
             },
             include : {
                 images: true,
                 category: true,
                 colour: true,
-                size: true,
+                size: {
+                    include: {
+                        product_sizes: true,
+                    }
+                },
                 brand: true,
 
             },

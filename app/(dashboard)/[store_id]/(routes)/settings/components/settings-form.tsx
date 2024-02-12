@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertModal } from "@/components/modals/AlertModal";
+import { AlertModal } from "@/components/modals/alert-modal";
+import { ApiAlert } from "@/components/ui/apiAlert";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,8 +14,9 @@ import {
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useOrigin } from "@/hooks/use-origin";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Brand } from "@prisma/client";
+import { Store } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -23,48 +25,34 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import * as z from "zod";
 
-interface BrandFormProps {
-  initialData: Brand | null;
+interface SettingsFormProps {
+  initialData: Store;
 }
 
 const formSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(2),
 });
 
-type BrandFormValues = z.infer<typeof formSchema>;
+type SettingsFormValues = z.infer<typeof formSchema>;
 
-const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
+const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
   const params = useParams();
   const router = useRouter();
+  const origin = useOrigin();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const title = initialData ? "Edit Brand" : "Create Brand";
-  const description = initialData ? "Edit a Brand" : "Add a New Brand";
-  const toastMessage = initialData ? "Brand Updated!" : "Brand Created!";
-  const action = initialData ? "Save Changes" : "Create";
-
-  const form = useForm<BrandFormValues>({
+  const form = useForm<SettingsFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData ?? {
-      name: "",
-    },
+    defaultValues: initialData,
   });
 
-  const onSubmit = async (data: BrandFormValues) => {
+  const onSubmit = async (data: SettingsFormValues) => {
     try {
       setLoading(true);
-      if (initialData) {
-        await axios.patch(
-          `/api/${params.store_id}/brands/${params.brandId}`,
-          data
-        );
-      } else {
-        await axios.post(`/api/${params.store_id}/brands`, data);
-      }
+      await axios.patch(`/api/stores/${params.store_id}`, data);
       router.refresh();
-      router.push(`/${params.store_id}/brands`);
-      toast.success(toastMessage);
+      toast.success("Store Updated");
     } catch (error) {
       toast.error("Something Went Wrong");
     } finally {
@@ -75,13 +63,13 @@ const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${params.store_id}/brands/${params.brandId}`);
+      await axios.delete(`/api/stores/${params.store_id}`);
       router.refresh();
-      router.push(`/${params.store_id}/brands`);
-      toast.success("Brand Deleted.");
+      router.push("/");
+      toast.success("Store Deleted.");
     } catch (error: any) {
       toast.error(
-        "Make Sure You Have Removed All Products Using This Brand First."
+        "Make Sure You Have Removed All Products and Categories First."
       );
     } finally {
       setLoading(false);
@@ -96,19 +84,19 @@ const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
+        data-cy="continue-delete-store-button"
       />
       <div className="flex items-center justify-between">
-        <Heading title={title} description={description} />
-        {initialData && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpen(true)}
-            disabled={loading}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        )}
+        <Heading title="Settings" description="Manage Store Preferences" />
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setOpen(true)}
+          disabled={loading}
+          data-cy="delete-store-button"
+        >
+          <Trash className="h-4 w-4" />
+        </Button>
       </div>
       <Separator />
       <Form {...form}>
@@ -126,8 +114,9 @@ const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Brand name"
+                      placeholder="Store Name"
                       {...field}
+                      data-cy="change-store-name-input"
                     />
                   </FormControl>
                   <FormMessage />
@@ -135,13 +124,24 @@ const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
               )}
             />
           </div>
-          <Button disabled={loading} className="ml-auto" type="submit">
-            {action}
+          <Button
+            disabled={loading}
+            className="ml-auto"
+            type="submit"
+            data-cy="save-store-name"
+          >
+            Save Changes
           </Button>
         </form>
       </Form>
+      <Separator />
+      <ApiAlert
+        title="NEXT_PUBLIC_API_URL"
+        description={`${origin}/api/${params.store_id}`}
+        variant="public"
+      />
     </>
   );
 };
 
-export default BrandForm;
+export default SettingsForm;

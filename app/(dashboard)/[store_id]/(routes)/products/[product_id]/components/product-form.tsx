@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertModal } from "@/components/modals/AlertModal";
+import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -23,10 +23,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, Colour, Image, Product, Size, Brand } from "@prisma/client";
 import axios from "axios";
-import { Trash } from "lucide-react";
+import { data } from "cypress/types/jquery";
+import { Plus, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,17 +59,20 @@ const formSchema = z.object({
   name: z.string().min(1),
   images: z.object({ url: z.string() }).array(),
   price: z.coerce.number().min(1),
-  discountRate: z.coerce.number().optional(),
+  discount_rate: z.coerce.number().optional(),
+  quantity: z.coerce.number(),
+  size_id: z.string(),
   category_id: z.string().min(1),
   colour_id: z.string().min(1),
-  brandId: z.string().min(1),
-  size_id: z.string().min(1),
-  isFeatured: z.boolean().default(false).optional(),
-  isArchived: z.boolean().default(false).optional(),
-  isDiscounted: z.boolean().default(false).optional(),
+  brand_id: z.string().min(1),
+  is_featured: z.boolean().default(false).optional(),
+  is_archived: z.boolean().default(false).optional(),
+  is_discounted: z.boolean().default(false).optional(),
 });
 
-type ProductFormValues = z.infer<typeof formSchema>;
+type ProductFormValues = z.infer<typeof formSchema> & {
+  sizeQuantities: { size_id: string; quantity: number }[];
+};
 
 const ProductForm: React.FC<ProductFormProps> = ({
   initialData,
@@ -72,6 +85,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sizeQuantities, setSizeQuantities] = useState<
+    { size_id: string; quantity: number }[]
+  >([]);
 
   const title = initialData ? "Edit Product" : "Create Product";
   const description = initialData ? "Edit a Product" : "Add a New Product";
@@ -84,38 +100,65 @@ const ProductForm: React.FC<ProductFormProps> = ({
       ? {
           ...initialData,
           price: parseFloat(String(initialData?.price)),
-          discountRate: parseFloat(String(initialData?.discountRate)),
+          discount_rate: parseFloat(String(initialData?.discount_rate)),
+          quantity: parseFloat(String(initialData?.discount_rate)),
         }
       : {
           name: "",
           images: [],
           price: 0,
-          discountRate: 0,
+          discount_rate: 0,
+          quantity: 0,
+          size_id: "",
           category_id: "",
           colour_id: "",
-          size_id: "",
-          brandId: "",
-          isFeatured: false,
-          isArchived: false,
-          isDiscounted: false,
+          brand_id: "",
+          is_featured: false,
+          is_archived: false,
+          is_discounted: false,
         },
   });
 
+  const addSizeQuantity = () => {
+    form.handleSubmit(async (data) => {
+      const { size_id, quantity } = data;
+      if (size_id && quantity) {
+        setSizeQuantities((prev) => [...prev, { size_id, quantity }]);
+        form.setValue("size_id", "");
+        form.setValue("quantity", 0);
+      }
+    })();
+  };
+
+  const removeSizeQuantity = (index: number) => {
+    setSizeQuantities((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: ProductFormValues) => {
+    "use server"
     try {
       setLoading(true);
+      const productData = {
+        ...data,
+        sizeQuantities: sizeQuantities,
+      };
+      console.log(productData);
       if (initialData) {
         await axios.patch(
           `/api/${params.store_id}/products/${params.product_id}`,
-          data
+          productData
         );
       } else {
-        await axios.post(`/api/${params.store_id}/products`, data);
+        await axios.post(`/api/${params.store_id}/products`, productData);
       }
       router.refresh();
       router.push(`/${params.store_id}/products`);
       toast.success(toastMessage);
     } catch (error) {
+      console.error("API Error:", error);
+      if (error.response) {
+        console.error("API Error Response:", error.response.data);
+      }
       toast.error("Something Went Wrong");
     } finally {
       setLoading(false);
@@ -223,7 +266,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="discountRate"
+              name="discount_rate"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sale Discount (%)</FormLabel>
@@ -268,39 +311,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="size_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Size</FormLabel>
-                  <Select
-                    disabled={loading}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select a Size"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sizes.map((size) => (
-                        <SelectItem key={size.id} value={size.id}>
-                          {size.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="brandId"
+              name="brand_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
@@ -364,7 +375,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="isDiscounted"
+              name="is_discounted"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
@@ -384,7 +395,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="isFeatured"
+              name="is_featured"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
@@ -404,7 +415,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="isArchived"
+              name="is_archived"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
@@ -422,7 +433,89 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+            <div className="flex items-center space-x-4">
+              <FormField
+                control={form.control}
+                name="size_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Size</FormLabel>
+                    <Select
+                      disabled={loading}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            defaultValue={field.value}
+                            placeholder="Select a Size"
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sizes.map((size) => (
+                          <SelectItem key={size.id} value={size.id}>
+                            {size.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input disabled={loading} placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="button" size="sm" onClick={addSizeQuantity}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add
+              </Button>
+            </div>
           </div>
+          <Table>
+            <TableCaption>
+              A list of sizes with correlating quantities
+            </TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Size</TableHead>
+                <TableHead>Quantity</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sizeQuantities.map((sq, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    {sizes.find((size) => size.id === sq.size_id)?.name}
+                  </TableCell>
+                  <TableCell>{sq.quantity}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeSizeQuantity(index)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Separator />
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>

@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useStoreModal } from "@/hooks/useStoreModal";
+import { useStoreModal } from "@/hooks/use-store-modal";
 import { Store } from "@prisma/client";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ interface StoreSwitcherProps extends PopoverTriggerProps {
 
 export default function StoreSwitcher({
   className,
-  items = []
+  items = [],
 }: StoreSwitcherProps) {
   const storeModal = useStoreModal();
   const params = useParams();
@@ -65,7 +65,6 @@ export default function StoreSwitcher({
         <Button
           variant="outline"
           size="sm"
-          
           aria-expanded={open}
           aria-label="Select a store"
           className={cn("w-[200px] justify-between", className)}

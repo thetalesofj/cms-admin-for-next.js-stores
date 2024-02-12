@@ -6,11 +6,11 @@ import { SubCategoryColumn } from "./components/columns";
 const SubCategoriesPage = async ({
   params,
 }: {
-  params: { category_id: string };
+  params: { store_id: string };
 }) => {
   const subCategories = await prismadb.subCategory.findMany({
     where: {
-      category_id: params.category_id,
+      store_id: params.store_id,
     },
     include: {
       category: true,
@@ -24,9 +24,9 @@ const SubCategoriesPage = async ({
   const formattedSubCategories: SubCategoryColumn[] = subCategories.map(
     (item) => ({
       id: item.id,
-      subName: item.name,
-      styleName: item.name,
-      categoryName: item.category.name,
+      subcategory: item.name,
+      styles: item.styles.map((style) => style.name).join(', '),
+      category: item.category.name,
       createdAt: format(item.createdAt, "do MMMM yyyy"),
     })
   );

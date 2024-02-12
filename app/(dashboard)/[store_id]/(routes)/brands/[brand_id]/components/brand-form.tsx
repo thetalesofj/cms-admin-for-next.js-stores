@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertModal } from "@/components/modals/AlertModal";
+import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,16 +12,9 @@ import {
 } from "@/components/ui/form";
 import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Billboard, Category } from "@prisma/client";
+import { Brand } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -30,53 +23,47 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import * as z from "zod";
 
-interface CategoryFormProps {
-  initialData: Category | null;
-  billboards: Billboard[];
+interface BrandFormProps {
+  initialData: Brand | null;
 }
 
 const formSchema = z.object({
   name: z.string().min(1),
-  billboard_id: z.string().min(1),
 });
 
-type CategoryFormValues = z.infer<typeof formSchema>;
+type BrandFormValues = z.infer<typeof formSchema>;
 
-const CategoryForm: React.FC<CategoryFormProps> = ({
-  initialData,
-  billboards,
-}) => {
+const BrandForm: React.FC<BrandFormProps> = ({ initialData }) => {
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const title = initialData ? "Edit Category" : "Create Category";
-  const description = initialData ? "Edit a Category" : "Add a New Category";
-  const toastMessage = initialData ? "Category Updated!" : "Category Created!";
+  const title = initialData ? "Edit Brand" : "Create Brand";
+  const description = initialData ? "Edit a Brand" : "Add a New Brand";
+  const toastMessage = initialData ? "Brand Updated!" : "Brand Created!";
   const action = initialData ? "Save Changes" : "Create";
 
-  const form = useForm<CategoryFormValues>({
+  const form = useForm<BrandFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ?? {
       name: "",
-      billboard_id: "",
     },
   });
 
-  const onSubmit = async (data: CategoryFormValues) => {
+  const onSubmit = async (data: BrandFormValues) => {
     try {
       setLoading(true);
       if (initialData) {
         await axios.patch(
-          `/api/${params.store_id}/categories/${params.category_id}`,
+          `/api/${params.store_id}/brands/${params.brand_id}`,
           data
         );
       } else {
-        await axios.post(`/api/${params.store_id}/categories`, data);
+        await axios.post(`/api/${params.store_id}/brands`, data);
       }
       router.refresh();
-      router.push(`/${params.store_id}/categories`);
+      router.push(`/${params.store_id}/brands`);
       toast.success(toastMessage);
     } catch (error) {
       toast.error("Something Went Wrong");
@@ -88,15 +75,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(
-        `/api/${params.store_id}/categories/${params.category_id}`
-      );
+      await axios.delete(`/api/${params.store_id}/brands/${params.brand_id}`);
       router.refresh();
-      router.push(`/${params.store_id}/categories`);
-      toast.success("Category Deleted.");
+      router.push(`/${params.store_id}/brands`);
+      toast.success("Brand Deleted.");
     } catch (error: any) {
       toast.error(
-        "Make Sure You Have Removed All Products Using This Category First."
+        "Make Sure You Have Removed All Products Using This Brand First."
       );
     } finally {
       setLoading(false);
@@ -141,42 +126,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Category name"
+                      placeholder="Brand name"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="billboard_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Billboard</FormLabel>
-                  <Select
-                    disabled={loading}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select a billboard"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {billboards.map((billboard) => (
-                        <SelectItem key={billboard.id} value={billboard.id}>
-                          {billboard.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -191,4 +144,4 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   );
 };
 
-export default CategoryForm;
+export default BrandForm;

@@ -14,9 +14,9 @@ export type ProductColumn = {
   size: string;
   category: string;
   colour: string;
-  isFeatured: boolean;
-  isDiscounted: boolean;
-  isArchived: boolean;
+  is_featured: boolean;
+  is_discounted: boolean;
+  is_archived: boolean;
   createdAt: string;
 };
 
@@ -64,7 +64,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
     },
   },
   {
-    accessorKey: "isArchived",
+    accessorKey: "is_archived",
     header: ({ column }) => {
       return (
         <Button
@@ -78,7 +78,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
     },
   },
   {
-    accessorKey: "isFeatured",
+    accessorKey: "is_featured",
     header: ({ column }) => {
       return (
         <Button
@@ -92,7 +92,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
     },
   },
   {
-    accessorKey: "isDiscounted",
+    accessorKey: "is_discounted",
     header: ({ column }) => {
       return (
         <Button
@@ -120,7 +120,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
     },
   },
   {
-    accessorKey: "discountRate",
+    accessorKey: "discount_rate",
     header: ({ column }) => {
       return (
         <Button

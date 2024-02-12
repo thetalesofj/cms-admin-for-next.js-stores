@@ -4,16 +4,16 @@ import { NextResponse } from "next/server";
 
 export async function GET (
     req: Request,
-    { params } : { params: { brandId: string } }
+    { params } : { params: { brand_id: string } }
 ) {
     try {
-        if (!params.brandId) {
+        if (!params.brand_id) {
             return new NextResponse("Brand ID Required", { status : 400})
         }
 
         const brand = await prismadb.brand.findUnique({
             where: {
-                id: params.brandId,
+                id: params.brand_id,
             }
         });
 
@@ -27,7 +27,7 @@ export async function GET (
 
 export async function PATCH (
     req: Request,
-    { params } : { params: { store_id: string , brandId: string} }
+    { params } : { params: { store_id: string , brand_id: string} }
 ) {
     try {
         const { userId } = auth();
@@ -42,7 +42,7 @@ export async function PATCH (
             return new NextResponse("Name Required", { status : 400})
         }
        
-        if (!params.brandId) {
+        if (!params.brand_id) {
             return new NextResponse("Brand ID Required", { status : 400})
         }
 
@@ -60,7 +60,7 @@ export async function PATCH (
 
         const brand = await prismadb.brand.updateMany({
             where: {
-                id: params.brandId,
+                id: params.brand_id,
             },
             data: {
                 name
@@ -77,7 +77,7 @@ export async function PATCH (
 
 export async function DELETE (
     req: Request,
-    { params } : { params: { store_id: string, brandId: string } }
+    { params } : { params: { store_id: string, brand_id: string } }
 ) {
     try {
         const { userId } = auth();
@@ -85,7 +85,7 @@ export async function DELETE (
         if (!userId) {
             return new NextResponse("Unauthenticated", { status : 401 })
         }
-        if (!params.brandId) {
+        if (!params.brand_id) {
             return new NextResponse("Brand ID Required", { status : 400})
         }
 
@@ -102,7 +102,7 @@ export async function DELETE (
 
         const brand = await prismadb.brand.deleteMany({
             where: {
-                id: params.brandId,
+                id: params.brand_id,
             }
         });
 

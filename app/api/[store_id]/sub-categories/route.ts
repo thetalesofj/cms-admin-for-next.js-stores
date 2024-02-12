@@ -10,7 +10,7 @@ export async function POST(
 
         const body = await req.json()
         const { userId } = auth();
-        const { name, category_id } = body
+        const { name, category_id, styles } = body
         
 
         if (!userId) {
@@ -23,6 +23,9 @@ export async function POST(
 
         if (!category_id) {
             return new NextResponse("Category ID Required", { status: 400 })
+        }
+        if (!styles) {
+            return new NextResponse("Styles are Required", { status: 400 })
         }
 
         if (!params.store_id) {
@@ -42,10 +45,18 @@ export async function POST(
 
         const subCategory = await prismadb.subCategory.create({
             data: {
-                name,
-                category_id,
+                name: name,
+                category_id: category_id,
+                styles: {
+                    createMany: {
+                        data: styles.map((style: string) => ({ name: style })),
+                    },
+                },
                 store_id: params.store_id,
-            }
+            },
+            include: {
+              styles: true,
+            },
         });
 
         return NextResponse.json(subCategory);

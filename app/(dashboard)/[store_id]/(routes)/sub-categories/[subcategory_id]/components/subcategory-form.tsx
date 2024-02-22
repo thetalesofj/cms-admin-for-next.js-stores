@@ -21,9 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SubCategory, Category } from "@prisma/client";
+import { SubCategory, Category, Style } from "@prisma/client";
 import axios from "axios";
 import { Plus, SquarePen, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -35,6 +43,7 @@ import * as z from "zod";
 interface SubCategoryFormProps {
   initialData: SubCategory | null;
   categories: Category[];
+  styles: Style[] | undefined
 }
 
 const formSchema = z.object({
@@ -48,6 +57,7 @@ type SubCategoryFormValues = z.infer<typeof formSchema> ;
 const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   initialData,
   categories,
+  styles
 }) => {
   const params = useParams();
   const router = useRouter();
@@ -90,18 +100,18 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   const removeStyle = (index: number) => {
     setSaveStyle((prev) => prev.filter((_, i) => i !== index));
   };
-  
-  type SubCategoryNoStyle = Omit<SubCategoryFormValues, "style"> 
 
-  const onSubmit = async (data: SubCategoryNoStyle) => {
+  const onSubmit = async (data: SubCategoryFormValues) => {
+    const styles = saveStyle.map((styles) => styles.name);
+    const { style, ...formData } = data;
+    const productData = {
+      ...formData,
+      store_id: params.store_id,
+      styles
+    };
     try {
-      setLoading(true);
-      const styles = saveStyle.map((style) => style.name);
-      const productData = {
-        ...data,
-        styles
-      };
       console.log(productData)
+      setLoading(true);
       if (initialData) {
         await axios.patch(
           `/api/${params.store_id}/sub-categories/${params.subcategory_id}`,
@@ -250,7 +260,7 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
           </div>
           <Table>
             <TableCaption>
-              A list of styles for correlating sub-category
+              A list of styles for the correlating sub-category
             </TableCaption>
             <TableHeader>
               <TableRow>
@@ -258,9 +268,9 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {saveStyle.map((sq, index) => (
+              {styles && styles.map((styles, index) => (
                 <TableRow key={index}>
-                  <TableCell>{sq.name}</TableCell>
+                  <TableCell>{styles.name}</TableCell>
                   <TableCell className="space-x-4">
                     <Button
                       variant="secondary"

@@ -24,12 +24,13 @@ const SubCategoriesPage = async ({
   const formattedSubCategories: SubCategoryColumn[] = subCategories.map(
     (item) => ({
       id: item.id,
-      subcategory: item.name,
-      styles: item.styles.map((style) => style.name).join(', '),
+      name: item.name,
+      styles: item.styles.map((style) => style.name).join(' | '),
       category: item.category.name,
       createdAt: format(item.createdAt, "do MMMM yyyy"),
     })
   );
+  
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">

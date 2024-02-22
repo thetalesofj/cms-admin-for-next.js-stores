@@ -40,7 +40,7 @@ export const SubCategoryClient: React.FC<SubCategoryClientProps> = ({
         description="Manage API calls for sub-categories"
       />
       <Separator />
-      <ApiList entityName="subcategories" entityIdName="subcategory_id" />
+      <ApiList entityName="sub-categories" entityIdName="subcategory_id" />
     </>
   );
 };

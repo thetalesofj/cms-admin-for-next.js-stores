@@ -9,21 +9,21 @@ datasource db {
 }
 
 model Store {
-  id             String        @id @default(uuid())
-  name           String
-  userId         String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  sizes          Size[]        @relation("StoreToSize")
-  brand          Brand[]       @relation("StoreToBrand")
-  colours        Colour[]      @relation("StoreToColour")
-  billboards     Billboard[]   @relation("StoreToBillboard")
-  categories     Category[]    @relation("StoreToCategory")
-  sub_categories SubCategory[] @relation("StoreToSubCategory")
-  styles         Style[]       @relation("StoreToStyle")
-  products       Product[]     @relation("StoreToProduct")
-  order          Order[]       @relation("StoreToOrder")
-  modal          Modal[]       @relation("StoreToModal")
+  id            String        @id @default(uuid())
+  name          String
+  userId        String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sizes         Size[]        @relation("StoreToSize")
+  brand         Brand[]       @relation("StoreToBrand")
+  colours       Colour[]      @relation("StoreToColour")
+  billboards    Billboard[]   @relation("StoreToBillboard")
+  categories    Category[]    @relation("StoreToCategory")
+  subcategories SubCategory[] @relation("StoreToSubCategory")
+  styles        Style[]       @relation("StoreToStyle")
+  products      Product[]     @relation("StoreToProduct")
+  order         Order[]       @relation("StoreToOrder")
+  modal         Modal[]       @relation("StoreToModal")
 }
 
 model Billboard {
@@ -40,16 +40,16 @@ model Billboard {
 }
 
 model Category {
-  id             String        @id @default(uuid())
-  store_id       String
-  billboard_id   String
-  name           String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  store          Store         @relation("StoreToCategory", fields: [store_id], references: [id])
-  billboard      Billboard     @relation(fields: [billboard_id], references: [id])
-  products       Product[]     @relation("CategoryToProduct")
-  sub_categories SubCategory[] @relation("CategoryToSubCategory")
+  id            String        @id @default(uuid())
+  store_id      String
+  billboard_id  String
+  name          String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  store         Store         @relation("StoreToCategory", fields: [store_id], references: [id])
+  billboard     Billboard     @relation(fields: [billboard_id], references: [id])
+  products      Product[]     @relation("CategoryToProduct")
+  subcategories SubCategory[] @relation("CategoryToSubCategory")
 
   @@index([store_id])
   @@index([billboard_id])
@@ -65,7 +65,7 @@ model SubCategory {
   category    Category  @relation("CategoryToSubCategory", fields: [category_id], references: [id])
   store       Store     @relation("StoreToSubCategory", fields: [store_id], references: [id])
   products    Product[] @relation("SubCategoryToProduct")
-  styles      Style[]   @relation("SubCategoryToStyle")
+  styles      Style[]   @relation("SubCategoryToStyles")
 
   @@index([store_id])
   @@index([category_id])
@@ -78,7 +78,7 @@ model Style {
   updatedAt      DateTime    @updatedAt
   store_id       String
   subcategory_id String
-  subcategory    SubCategory @relation("SubCategoryToStyle", fields: [subcategory_id], references: [id])
+  subcategory    SubCategory @relation("SubCategoryToStyles", fields: [subcategory_id], references: [id])
   store          Store       @relation("StoreToStyle", fields: [store_id], references: [id])
   products       Product[]   @relation("StyleToProduct")
 
@@ -166,15 +166,15 @@ model Product {
   style_id       String
   size_id        String
   colour_id      String
-  brand_id       String
   name           String
   price          Decimal
-  is_featured    Boolean       @default(false)
-  is_archived    Boolean       @default(false)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  is_discounted  Boolean       @default(false)
+  brand_id       String
   discount_rate  Decimal
+  is_archived    Boolean       @default(false)
+  is_discounted  Boolean       @default(false)
+  is_featured    Boolean       @default(false)
   product_size   ProductSize[]
   store          Store         @relation("StoreToProduct", fields: [store_id], references: [id])
   category       Category      @relation("CategoryToProduct", fields: [category_id], references: [id])

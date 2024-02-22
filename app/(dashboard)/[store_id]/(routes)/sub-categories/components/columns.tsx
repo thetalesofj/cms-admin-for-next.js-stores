@@ -7,7 +7,7 @@ import { CellAction } from "./cell-action";
 
 export type SubCategoryColumn = {
   id: string;
-  subcategory: string;
+  name: string;
   styles: string;
   category: string;
   createdAt: string;
@@ -15,7 +15,7 @@ export type SubCategoryColumn = {
 
 export const columns: ColumnDef<SubCategoryColumn>[] = [
   {
-    accessorKey: "subcategory",
+    accessorKey: "name",
     header: ({ column }) => {
         return (
           <Button
@@ -23,20 +23,6 @@ export const columns: ColumnDef<SubCategoryColumn>[] = [
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Sub-Category
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-  },
-  {
-    accessorKey: "styles",
-    header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Style(s)
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         )
@@ -56,6 +42,20 @@ export const columns: ColumnDef<SubCategoryColumn>[] = [
         )
       },
     cell: ({ row }) => row.original.category,
+  },
+  {
+    accessorKey: "styles",
+    header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Style(s)
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
   },
   {
     accessorKey: "createdAt",

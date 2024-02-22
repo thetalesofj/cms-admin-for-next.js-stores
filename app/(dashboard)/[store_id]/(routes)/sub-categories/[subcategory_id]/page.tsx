@@ -6,6 +6,7 @@ const SubCategoryPage = async ({
 }: {
   params: { subcategory_id: string; store_id: string };
 }) => {
+  
   const subCategory = await prismadb.subCategory.findUnique({
     where: {
       id: params.subcategory_id,
@@ -24,7 +25,7 @@ const SubCategoryPage = async ({
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <SubCategoryForm categories={categories} initialData={subCategory} />
+        <SubCategoryForm categories={categories} initialData={subCategory} styles={subCategory?.styles} />
       </div>
     </div>
   );

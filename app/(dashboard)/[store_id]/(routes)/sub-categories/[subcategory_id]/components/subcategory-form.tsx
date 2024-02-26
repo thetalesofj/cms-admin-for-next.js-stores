@@ -2,6 +2,7 @@
 
 import { AlertModal } from "@/components/modals/alert-modal";
 import { StyleModal } from "@/components/modals/style-modal";
+import { StyleAlertModal } from "@/components/modals/style-alert-modal";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -49,7 +50,7 @@ interface SubCategoryFormProps {
 const formSchema = z.object({
   name: z.string().min(1),
   category_id: z.string().min(1),
-  style: z.string(),
+  style: z.string().optional(),
 });
 
 type SubCategoryFormValues = z.infer<typeof formSchema> ;
@@ -57,13 +58,14 @@ type SubCategoryFormValues = z.infer<typeof formSchema> ;
 const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   initialData,
   categories,
-  styles
+  styles: initialStyles
 }) => {
+  
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [saveStyle, setSaveStyle] = useState<{ name: string }[]>([]);
+  const [styles, setstyles] = useState<{ name: string }[]>(initialStyles || []);
   const [styleModalOpen, setStyleModalOpen] = useState(false);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
 
@@ -92,22 +94,22 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   const addStyle = () => {
     const styleValue = form.getValues("style");
     if (styleValue) {
-      setSaveStyle((prev) => [...prev, { name: styleValue }]);
+      setstyles((prev) => [...prev, { name: styleValue }]);
       form.setValue("style", "");
     }
   };
 
   const removeStyle = (index: number) => {
-    setSaveStyle((prev) => prev.filter((_, i) => i !== index));
+    setstyles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: SubCategoryFormValues) => {
-    const styles = saveStyle.map((styles) => styles.name);
+    
     const { style, ...formData } = data;
     const productData = {
       ...formData,
       store_id: params.store_id,
-      styles
+      styles: styles.map((styles) => styles.name)
     };
     try {
       console.log(productData)
@@ -125,10 +127,12 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
       toast.success(toastSubMessage);
     } catch (error) {
       console.error("API Error:", error);
-      if (error.response) {
+      if (error.response && error.response.data && error.response.data.error) {
         console.error("API Error Response:", error.response.data);
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Something Went Wrong");
       }
-      toast.error("Something Went Wrong");
     } finally {
       setLoading(false);
     }
@@ -224,6 +228,7 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
                       disabled={loading}
                       placeholder="E.g. Shoes"
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -242,6 +247,7 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
                         disabled={loading}
                         placeholder="E.g. Trainers"
                         {...field}
+                        value={field.value || ''}
                       />
                       <Button
                         type="button"
@@ -268,7 +274,7 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {styles && styles.map((styles, index) => (
+              {styles.map((styles, index) => (
                 <TableRow key={index}>
                   <TableCell>{styles.name}</TableCell>
                   <TableCell className="space-x-4">
@@ -301,12 +307,12 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
                   setStyleModalOpen(false); 
                 }}
               />
-              <AlertModal
+              <StyleAlertModal
                 isOpen={alertModalOpen}
                 onClose={() => setAlertModalOpen(false)}
                 onConfirm={() => {
                   console.log("Deleting style...");
-                  removeStyle;
+                  removeStyle();
                   setAlertModalOpen(false);
                 }}
                 loading={loading}

@@ -29,7 +29,6 @@ export async function POST(
     if (!styles) {
       return new NextResponse("Styles are Required", { status: 400 });
     }
-
     if (!params.store_id) {
       return new NextResponse("Store ID Required", { status: 400 });
     }
@@ -43,6 +42,20 @@ export async function POST(
 
     if (!storeByUserId) {
       return new NextResponse("Unauthorised", { status: 403 });
+    }
+
+    const existingSubCategory = await prismadb.subCategory.findFirst({
+      where: {
+        name,
+        category_id,
+      },
+    });
+
+    if (existingSubCategory) {
+      return new NextResponse(
+        JSON.stringify({ error: "Sub-Category With The Same Name and Category Already Exists" }), 
+        { status: 400 }
+      );
     }
 
     const subCategory = await prismadb.subCategory.create({

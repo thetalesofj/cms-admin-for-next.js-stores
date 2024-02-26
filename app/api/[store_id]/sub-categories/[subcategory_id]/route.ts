@@ -157,15 +157,28 @@ export async function DELETE(
       return new NextResponse("Unauthorised", { status: 403 });
     }
 
-    const subCategory = await prismadb.subCategory.deleteMany({
-      where: {
-        id: params.subcategory_id,
-      },
-    });
+    const SubCategoryAndStyles = await deleteSubCategoryAndStyles(params.subcategory_id);
 
-    return NextResponse.json(subCategory);
+    return NextResponse.json(SubCategoryAndStyles);
+    
   } catch (error) {
     console.log('[SUBCATEGORY_DELETE]', error);
     return new NextResponse("Internal error", { status: 500 });
   }
+}
+async function deleteSubCategoryAndStyles(subcategoryId: string) {
+  
+  await prismadb.style.deleteMany({
+    where: {
+      subcategory_id: subcategoryId,
+    },
+  });
+
+  await prismadb.subCategory.deleteMany({
+    where: {
+      id: subcategoryId,
+    },
+  });
+
+  return { message: "Sub-Category and associated styles deleted successfully." };
 }

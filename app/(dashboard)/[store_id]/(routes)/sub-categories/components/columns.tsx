@@ -15,34 +15,34 @@ export type SubCategoryColumn = {
 
 export const columns: ColumnDef<SubCategoryColumn>[] = [
   {
-    accessorKey: "name",
-    header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Sub-Category
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-  },
-  {
     accessorKey: "category",
     header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+      return (
+        <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
             Category
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         )
       },
-    cell: ({ row }) => row.original.category,
-  },
+      cell: ({ row }) => row.original.category,
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Sub-Category
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+    },
   {
     accessorKey: "styles",
     header: ({ column }) => {

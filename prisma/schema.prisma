@@ -65,7 +65,7 @@ model SubCategory {
   category    Category  @relation("CategoryToSubCategory", fields: [category_id], references: [id])
   store       Store     @relation("StoreToSubCategory", fields: [store_id], references: [id])
   products    Product[] @relation("SubCategoryToProduct")
-  styles      Style[]   @relation("SubCategoryToStyles")
+  styles      Style[]   @relation("SubCategoryToStyle")
 
   @@index([store_id])
   @@index([category_id])
@@ -78,12 +78,13 @@ model Style {
   updatedAt      DateTime    @updatedAt
   store_id       String
   subcategory_id String
-  subcategory    SubCategory @relation("SubCategoryToStyles", fields: [subcategory_id], references: [id])
+  subcategory    SubCategory @relation("SubCategoryToStyle", fields: [subcategory_id], references: [id])
   store          Store       @relation("StoreToStyle", fields: [store_id], references: [id])
   products       Product[]   @relation("StyleToProduct")
 
   @@index([subcategory_id])
   @@index([store_id])
+  @@unique([name])
 }
 
 model Modal {
@@ -186,7 +187,7 @@ model Product {
   images         Image[]
   orderItems     OrderItem[]
 
-  @@unique([subcategory_id, colour_id, name])
+  @@unique([subcategory_id, style_id, colour_id, name])
   @@index([store_id])
   @@index([category_id])
   @@index([subcategory_id])

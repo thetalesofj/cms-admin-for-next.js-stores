@@ -1,8 +1,6 @@
 "use client";
 
 import { AlertModal } from "@/components/modals/alert-modal";
-import { StyleModal } from "@/components/modals/style-modal";
-import { StyleAlertModal } from "@/components/modals/style-alert-modal";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,19 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SubCategory, Category, Style } from "@prisma/client";
+import { SubCategory, Category } from "@prisma/client";
 import axios from "axios";
-import { Plus, SquarePen, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -44,95 +33,54 @@ import * as z from "zod";
 interface SubCategoryFormProps {
   initialData: SubCategory | null;
   categories: Category[];
-  styles: Style[] | undefined
 }
 
 const formSchema = z.object({
   name: z.string().min(1),
   category_id: z.string().min(1),
-  style: z.string().optional(),
 });
 
-type SubCategoryFormValues = z.infer<typeof formSchema> ;
+type SubCategoryFormValues = z.infer<typeof formSchema>;
 
 const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   initialData,
   categories,
-  styles: initialStyles
 }) => {
-  
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [styles, setstyles] = useState<{ name: string }[]>(initialStyles || []);
-  const [styleModalOpen, setStyleModalOpen] = useState(false);
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
 
   const title = initialData ? "Edit Sub-Category" : "Create Sub-Category";
   const description = initialData ? "Edit a Sub-Category" : "Add a New Sub-Category";
-  const toastSubMessage = initialData ? "Sub-Category Updated!" : "Sub-Category Created!";
+  const toastMessage = initialData ? "Sub-Category Updated!" : "Sub-Category Created!";
   const action = initialData ? "Save Changes" : "Create";
-  
+
   const form = useForm<SubCategoryFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ?? {
       name: "",
       category_id: "",
-      style: "",
     },
   });
 
-  const openStyleModal = () => {
-    setStyleModalOpen(true);
-  };
-
-  const openAlertModal = () => {
-    setAlertModalOpen(true);
-  };
-  
-  const addStyle = () => {
-    const styleValue = form.getValues("style");
-    if (styleValue) {
-      setstyles((prev) => [...prev, { name: styleValue }]);
-      form.setValue("style", "");
-    }
-  };
-
-  const removeStyle = (index: number) => {
-    setstyles((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const onSubmit = async (data: SubCategoryFormValues) => {
-    
-    const { style, ...formData } = data;
-    const productData = {
-      ...formData,
-      store_id: params.store_id,
-      styles: styles.map((styles) => styles.name)
-    };
     try {
-      console.log(productData)
       setLoading(true);
+      console.log(data)
       if (initialData) {
         await axios.patch(
           `/api/${params.store_id}/sub-categories/${params.subcategory_id}`,
-          productData
+          data
         );
       } else {
-        await axios.post(`/api/${params.store_id}/sub-categories`, productData);
+        await axios.post(`/api/${params.store_id}/sub-categories`, data);
       }
       router.refresh();
       router.push(`/${params.store_id}/sub-categories`);
-      toast.success(toastSubMessage);
+      toast.success(toastMessage);
     } catch (error) {
-      console.error("API Error:", error);
-      if (error.response && error.response.data && error.response.data.error) {
-        console.error("API Error Response:", error.response.data);
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Something Went Wrong");
-      }
+      toast.error("Something Went Wrong");
     } finally {
       setLoading(false);
     }
@@ -147,9 +95,9 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
       router.refresh();
       router.push(`/${params.store_id}/sub-categories`);
       toast.success("Sub-Category Deleted.");
-    } catch (error) {
+    } catch (error: any) {
       toast.error(
-        "Make Sure You Have Removed All Styles Using This Sub-Category First."
+        "Make Sure You Have Removed All Products Using This Sub-Category First."
       );
     } finally {
       setLoading(false);
@@ -187,6 +135,23 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
           <div className="grid grid-cols-3 gap-8">
             <FormField
               control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Sub-Category Name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="category_id"
               render={({ field }) => (
                 <FormItem>
@@ -217,108 +182,7 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sub-Category Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="E.g. Shoes"
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="style"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Style Name(s)</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-4">
-                      <Input
-                        disabled={loading}
-                        placeholder="E.g. Trainers"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={addStyle}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
-          <Table>
-            <TableCaption>
-              A list of styles for the correlating sub-category
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-black">Styles</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {styles.map((styles, index) => (
-                <TableRow key={index}>
-                  <TableCell>{styles.name}</TableCell>
-                  <TableCell className="space-x-4">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      type="button"
-                      onClick={openStyleModal}
-                    >
-                      <SquarePen className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      type="button"
-                      onClick={openAlertModal}
-                      disabled={loading}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-              <StyleModal
-                isOpen={styleModalOpen}
-                onClose={() => setStyleModalOpen(false)}
-                onSave={(values) => {
-                  console.log("Saving style with values:", values);
-                  setStyleModalOpen(false); 
-                }}
-              />
-              <StyleAlertModal
-                isOpen={alertModalOpen}
-                onClose={() => setAlertModalOpen(false)}
-                onConfirm={() => {
-                  console.log("Deleting style...");
-                  removeStyle();
-                  setAlertModalOpen(false);
-                }}
-                loading={loading}
-              />
-          </Table>
-          <Separator />
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>

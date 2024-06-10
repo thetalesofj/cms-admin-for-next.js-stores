@@ -1,14 +1,20 @@
 import prismadb from "@/lib/prismadb";
-import SubCategoryForm from "./components/subcategory-form";
+import StyleForm from "./components/style-form";
 
 const SubCategoryPage = async ({
   params,
 }: {
-  params: { subcategory_id: string; store_id: string };
+  params: { style_id: string; store_id: string };
 }) => {
-  const subcategory = await prismadb.subCategory.findUnique({
+  
+  const style = await prismadb.style.findUnique({
     where: {
-      id: params.subcategory_id,
+      id: params.style_id,
+    },
+  });
+  const subcategories = await prismadb.subCategory.findMany({
+    where: {
+      store_id: params.store_id,
     },
   });
 
@@ -21,7 +27,7 @@ const SubCategoryPage = async ({
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <SubCategoryForm categories={categories} initialData={subcategory} />
+        <StyleForm categories={categories} subcategories={subcategories} initialData={style} />
       </div>
     </div>
   );

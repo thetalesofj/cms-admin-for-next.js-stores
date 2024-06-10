@@ -2,105 +2,79 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
-interface SubCategoryRequest {
-  name: string;
-  category_id: string;
-  styles: string[];
-}
-
 export async function POST(
-    req: Request, 
-    { params }: { params: { store_id: string } }
-    ) {
-  try {
-    const body: SubCategoryRequest = await req.json();
-    const { userId } = auth();
-    const { name, category_id, styles } = body;
+    req: Request,
+    { params } : { params: { store_id: string } }
+) {
+    try {
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 401 });
-    }
-    if (!name) {
-      return new NextResponse("Name Required", { status: 400 });
-    }
-    if (!category_id) {
-      return new NextResponse("Category ID Required", { status: 400 });
-    }
-    if (!styles) {
-      return new NextResponse("Styles are Required", { status: 400 });
-    }
-    if (!params.store_id) {
-      return new NextResponse("Store ID Required", { status: 400 });
-    }
+        const body = await req.json()
+        const { userId } = auth();
+        const { name, category_id } = body
+        
 
-    const storeByUserId = await prismadb.store.findFirst({
-      where: {
-        id: params.store_id,
-        userId,
-      },
-    });
+        if (!userId) {
+            return new NextResponse("Unauthenticated", { status: 401 })
+        } 
 
-    if (!storeByUserId) {
-      return new NextResponse("Unauthorised", { status: 403 });
+        if (!name) {
+            return new NextResponse("Name Required", { status: 400 })
+        }
+
+        if (!category_id) {
+            return new NextResponse("Category ID Required", { status: 400 })
+        }
+
+        if (!params.store_id) {
+            return new NextResponse("Store ID Required", { status: 400 })
+        }
+
+        const storeByUserId = await prismadb.store.findFirst({
+            where: {
+                id: params.store_id,
+                userId
+            }
+        })
+
+        if (!storeByUserId) {
+            return new NextResponse("Unauthorised", { status: 403 })
+        }
+
+        const category = await prismadb.subCategory.create({
+            data: {
+                name,
+                category_id,
+                store_id: params.store_id
+            }
+        });
+
+        return NextResponse.json(category);
+
+    } catch(error) {
+        console.log("SUBCATEGORIES_POST", error);
+        return new NextResponse("Internal error", { status: 500 })
     }
-
-    const existingSubCategory = await prismadb.subCategory.findFirst({
-      where: {
-        name,
-        category_id,
-      },
-    });
-
-    if (existingSubCategory) {
-      return new NextResponse(
-        JSON.stringify({ error: "Sub-Category With The Same Name and Category Already Exists" }), 
-        { status: 400 }
-      );
-    }
-
-    const subCategory = await prismadb.subCategory.create({
-      data: {
-        name,
-        store_id: params.store_id,
-        category_id,
-        styles: {
-          createMany: {
-            data: styles.map((style: string) => ({ 
-                name: style, 
-                store_id: params.store_id 
-            })),
-          },
-        },
-      },
-      include: {
-        styles: true,
-      },
-    });
-
-    return NextResponse.json(subCategory);
-  } catch (error) {
-    console.log("SUBCATEGORIES_POST", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
 }
-
 export async function GET(
-    req: Request, { params }: { params: { store_id: string } }
-    ) {
-  try {
-    if (!params.store_id) {
-      return new NextResponse("Store ID Required", { status: 400 });
+    req: Request,
+    { params } : { params: { store_id: string } }
+) {
+    try {
+
+        if (!params.store_id) {
+            return new NextResponse("Store ID Required", { status: 400 })
+        }
+
+        const subcategories = await prismadb.subCategory.findMany({
+            where: {
+                store_id: params.store_id
+            }
+        });
+
+        return NextResponse.json(subcategories);
+
+    } catch(error) {
+        console.log("SUBCATEGORIES_GET", error);
+        return new NextResponse("Internal error", { status: 500 })
     }
-
-    const subCategories = await prismadb.subCategory.findMany({
-      where: {
-        store_id: params.store_id,
-      },
-    });
-
-    return NextResponse.json(subCategories);
-  } catch (error) {
-    console.log("SUBCATEGORIES_GET", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
 }

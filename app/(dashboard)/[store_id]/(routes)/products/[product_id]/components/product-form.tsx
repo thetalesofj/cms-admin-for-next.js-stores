@@ -135,7 +135,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    "use server"
     try {
       setLoading(true);
       const productData = {

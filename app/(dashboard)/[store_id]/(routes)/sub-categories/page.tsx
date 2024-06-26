@@ -19,8 +19,10 @@ const SubCategoriesPage = async ({ params }: { params: { store_id: string } }) =
   const formattedSubCategories: SubCategoryColumn[] = subcategories.map((item) => ({
     id: item.id,
     name: item.name,
+    styles: item.styles,
     category: item.category.name,
     createdAt: format(item.createdAt, "do MMMM yyyy"),
+    updatedAt: format(item.updatedAt, "do MMMM yyyy"),
   }));
   return (
     <div className="flex-col">

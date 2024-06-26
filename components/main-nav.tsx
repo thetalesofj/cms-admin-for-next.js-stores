@@ -55,11 +55,6 @@ export function MainNav({
       active: pathname === `/${params.store_id}/sub-categories`,
     },
     {
-      href: `/${params.store_id}/styles`,
-      label: "Styles",
-      active: pathname === `/${params.store_id}/styles`,
-    },
-    {
       href: `/${params.store_id}/brands`,
       label: "Brands",
       active: pathname === `/${params.store_id}/brands`,

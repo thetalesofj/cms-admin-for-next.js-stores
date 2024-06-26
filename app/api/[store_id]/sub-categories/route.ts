@@ -1,6 +1,12 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+
+interface SubCategoryRequest {
+    name: string;
+    category_id: string;
+    styles: string[];
+}
 
 export async function POST(
     req: Request,
@@ -8,51 +14,40 @@ export async function POST(
 ) {
     try {
 
-        const body = await req.json()
         const { userId } = auth();
-        const { name, category_id } = body
+        const body: SubCategoryRequest = await req.json()
+        const { name, category_id, styles } = body
         
 
         if (!userId) {
             return new NextResponse("Unauthenticated", { status: 401 })
         } 
 
-        if (!name) {
-            return new NextResponse("Name Required", { status: 400 })
-        }
-
-        if (!category_id) {
-            return new NextResponse("Category ID Required", { status: 400 })
-        }
-
-        if (!params.store_id) {
-            return new NextResponse("Store ID Required", { status: 400 })
+        if (!name || !category_id || !styles || !params.store_id) {
+            return new NextResponse("All fields are required", { status: 400 })
         }
 
         const storeByUserId = await prismadb.store.findFirst({
-            where: {
-                id: params.store_id,
-                userId
-            }
+            where: { id: params.store_id, userId },
         })
 
         if (!storeByUserId) {
             return new NextResponse("Unauthorised", { status: 403 })
         }
 
-        const category = await prismadb.subCategory.create({
+        const newSubCategory = await prismadb.subCategory.create({
             data: {
                 name,
+                store_id: params.store_id,
                 category_id,
-                store_id: params.store_id
+                styles
             }
         });
 
-        return NextResponse.json(category);
-
+        return NextResponse.json(newSubCategory);
     } catch(error) {
         console.log("SUBCATEGORIES_POST", error);
-        return new NextResponse("Internal error", { status: 500 })
+        return new NextResponse("Internal Server Error", { status: 500 })
     }
 }
 export async function GET(
@@ -60,7 +55,6 @@ export async function GET(
     { params } : { params: { store_id: string } }
 ) {
     try {
-
         if (!params.store_id) {
             return new NextResponse("Store ID Required", { status: 400 })
         }
@@ -72,7 +66,6 @@ export async function GET(
         });
 
         return NextResponse.json(subcategories);
-
     } catch(error) {
         console.log("SUBCATEGORIES_GET", error);
         return new NextResponse("Internal error", { status: 500 })

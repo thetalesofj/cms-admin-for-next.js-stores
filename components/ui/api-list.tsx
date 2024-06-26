@@ -2,7 +2,7 @@
 
 import { useOrigin } from "@/hooks/use-origin";
 import { useParams } from "next/navigation";
-import { ApiAlert } from "./apiAlert";
+import { ApiAlert } from "./api-alert";
 
 interface ApiListProps {
   entityName: string;

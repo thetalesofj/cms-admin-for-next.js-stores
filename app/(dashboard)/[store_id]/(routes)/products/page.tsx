@@ -11,7 +11,7 @@ const ProductsPage = async ({ params }: { params: { store_id: string } }) => {
     },
     include: {
       category: true,
-      size: true,
+      subCategory: true,
       colour: true,
       brand: true,
     },
@@ -35,9 +35,10 @@ const ProductsPage = async ({ params }: { params: { store_id: string } }) => {
       is_archived: item.is_archived,
       is_discounted: item.is_discounted,
       category: item.category.name,
+      subcategory: item.subCategory.name,
+      style: item.subCategory.styles,
       price: formatter.format(item.price.toNumber()),
       discount_rate: discountRateValue,
-      size: item.size.name,
       colour: item.colour.value,
       createdAt: format(item.createdAt, "do MMMM yyyy"),
     };

@@ -20,7 +20,7 @@ export async function GET (
                 category: true,
                 size: {
                     include: {
-                        product_sizes: true,
+                        productSize: true,
                     }
                 },
                 colour: true,
@@ -43,124 +43,64 @@ export async function PATCH (
     try {
         const { userId } = auth();
         const body = await req.json();
-        const { name, brand_id, price, discount_rate, category_id, style_id, colour_id, size_id, images, is_featured, is_discounted, is_archived, sizeQuantities } = body
+        const { name, brand_id, price, discount_rate, category_id, colour_id, subcategory_id, images, is_featured, is_discounted, is_archived, sizeQuantities } = body;
 
-        if (!userId) {
-            return new NextResponse("Unauthenticated", { status : 403})
-        }
-        if (!name) {
-            return new NextResponse("Name Required", { status: 400 })
-        }
-        if (!brand_id) {
-            return new NextResponse("Brand Required", { status: 400 })
-        }
-        if (!price) {
-            return new NextResponse("Price Required", { status: 400 })
-        }
-        if (!category_id) {
-            return new NextResponse("Category ID Required", { status: 400 })
-        }
-        if (!style_id) {
-            return new NextResponse("Category ID Required", { status: 400 })
-        }
-        if (!images?.length) {
-            return new NextResponse("Images Required", { status: 400 })
-        }
-        if (!size_id) {
-            return new NextResponse("Size ID Required", { status: 400 })
-        }
-        if (!colour_id) {
-            return new NextResponse("Colour ID Required", { status: 400 })
-        }
-        if (!params.product_id) {
-            return new NextResponse("product ID Required", { status : 400})
+        if (!userId || !name || !brand_id || !price || !category_id || !images?.length || !sizeQuantities?.length || !colour_id || !params.product_id) {
+            return new NextResponse("All fields are required", { status: 400 });
         }
 
         const storeByUserId = await prismadb.store.findFirst({
             where: {
                 id: params.store_id,
-                userId
-            }
-        })
+                userId,
+            },
+        });
 
         if (!storeByUserId) {
-            return new NextResponse("Unauthorised", { status: 403 })
+            return new NextResponse("Unauthorised", { status: 403 });
         }
-        
-        const updateData: Record<string, any> = {
-            name,
-            price,
-            category_id,
-            style_id,
-            colour_id,
-            brand_id,
-            size_id,
-            size: {
-                update: {
-                  product_sizes: {
-                    deleteMany: {},
-                    createMany: {
-                      data: sizeQuantities.map((index: { size_id: string; quantity: number }) => ({
-                        size: { connect: { id: index.size_id } },
-                        quantity: index.quantity,
-                      })),
-                    },
-                  },
-                },
-              },
-            images: {
-              deleteMany: {},
-            },
-            is_featured,
-            is_archived,
-            is_discounted,
-          };
-      console.log(updateData)
-          // Only add discount_rate to updateData if it is provided
-          if (typeof discount_rate !== 'undefined') {
-            updateData.discount_rate = discount_rate;
-            console.log('discount_rate before update:', discount_rate);
-          } 
-
-          if (sizeQuantities && sizeQuantities.length > 0) {
-            updateData.size.product_sizes = {
-              upsert: sizeQuantities.map((index: { size_id: string; quantity: number; }) => ({
-                where: { size_id: index.size_id, product_id: params.product_id },
-                create: { size_id: index.size_id, quantity: index.quantity },
-                update: { quantity: index.quantity },
-              })),
-            };
-          }
-
-        await prismadb.product.update({
-            where: {
-                id: params.product_id,
-            },
-            data: updateData,
-        });
 
         const product = await prismadb.product.update({
             where: {
-                id: params.product_id
+                id: params.product_id,
             },
             data: {
+                name,
+                price,
+                discount_rate,
+                category_id,
+                colour_id,
+                subcategory_id,
+                brand_id,
+                is_featured,
+                is_archived,
+                is_discounted,
                 images: {
+                    deleteMany: {},
                     createMany: {
-                        data: [
-                            ...images.map((image: { url: string}) => image),
-                        ]
-                    } 
-                }
-            }
-        })
+                        data: images.map((image: { url: string }) => image),
+                    },
+                },
+                product_sizes: {
+                    deleteMany: {},
+                    createMany: {
+                        data: sizeQuantities.map((sizeQuantity: { size_id: string, quantity: number }) => ({
+                            size_id: sizeQuantity.size_id,
+                            quantity: sizeQuantity.quantity,
+                        })),
+                    },
+                },
+            },
+        });
 
-        return NextResponse.json(product)
+        return NextResponse.json(product);
 
     } catch (error) {
         console.log('[PRODUCT_PATCH]', error);
         return new NextResponse("Internal error", { status: 500 });
     }
 }
+
 
 export async function DELETE (
     req: Request,

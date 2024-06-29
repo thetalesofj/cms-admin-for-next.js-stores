@@ -6,6 +6,7 @@ const ProductPage = async ({
 }: {
   params: { product_id: string; store_id: string };
 }) => {
+
   const product = await prismadb.product.findUnique({
     where: {
       id: params.product_id,
@@ -33,6 +34,16 @@ const ProductPage = async ({
     },
   });
 
+  const subcategories = await prismadb.subCategory.findMany({
+    where: {
+      store_id: params.store_id,
+    },
+  });
+
+  const styles = subcategories.flatMap(
+    subcategory => subcategory.styles
+  );
+
   const brands = await prismadb.brand.findMany({
     where: {
       store_id: params.store_id,
@@ -46,6 +57,8 @@ const ProductPage = async ({
           initialData={product}
           categories={categories}
           colours={colours}
+          subcategories={subcategories}
+          styles={styles}
           sizes={sizes}
           brands={brands}
         />

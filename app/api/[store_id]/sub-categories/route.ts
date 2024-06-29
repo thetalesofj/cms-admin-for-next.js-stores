@@ -14,16 +14,23 @@ export async function POST(
 ) {
     try {
 
+        console.log('POST request received');
+
         const { userId } = auth();
         const body: SubCategoryRequest = await req.json()
+
+        console.log('Request body:', body);
+
         const { name, category_id, styles } = body
         
 
         if (!userId) {
+            console.log('Unauthenticated request');
             return new NextResponse("Unauthenticated", { status: 401 })
         } 
 
         if (!name || !category_id || !styles || !params.store_id) {
+            console.log('Validation failed:', { name, category_id, styles, store_id: params.store_id });
             return new NextResponse("All fields are required", { status: 400 })
         }
 
@@ -32,6 +39,7 @@ export async function POST(
         })
 
         if (!storeByUserId) {
+            console.log('Unauthorized access attempt by user:', userId);
             return new NextResponse("Unauthorised", { status: 403 })
         }
 
@@ -43,6 +51,7 @@ export async function POST(
                 styles
             }
         });
+        console.log('New sub-category created:', newSubCategory);
 
         return NextResponse.json(newSubCategory);
     } catch(error) {
@@ -56,15 +65,16 @@ export async function GET(
 ) {
     try {
         if (!params.store_id) {
+            console.log('Validation failed:', { store_id: params.store_id });
             return new NextResponse("Store ID Required", { status: 400 })
         }
 
         const subcategories = await prismadb.subCategory.findMany({
             where: {
                 store_id: params.store_id
-            }
+            },
         });
-
+        console.log('sub-category retrieved:', subcategories);
         return NextResponse.json(subcategories);
     } catch(error) {
         console.log("SUBCATEGORIES_GET", error);

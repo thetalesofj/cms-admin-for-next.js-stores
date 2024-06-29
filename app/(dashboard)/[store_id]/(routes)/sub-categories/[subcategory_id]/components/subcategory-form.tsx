@@ -58,9 +58,9 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
   const form = useForm<SubCategoryFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: initialData?.name || '',
-      category_id: initialData?.category_id || '',
-      styles: initialData?.styles || [],
+      name: initialData?.name ?? '',
+      category_id: initialData?.category_id ?? '',
+      styles: initialData?.styles ?? [],
     },
   });
 
@@ -98,25 +98,36 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
     try {
       setLoading(true);
       data.styles = styles;
-      console.log("Initial Data: ",initialData)
-      console.log("Data: ",data)
-      const url = `/api/${params.store_id}/sub-categories/${params.subcategory_id}`;
-      console.log('Fetching URL:', url);
+      console.log("Initial Data: ", initialData);
+      console.log("Data: ", data);
+      
+      let url = `/api/${params.store_id}/sub-categories`;
+      let method = 'POST';
+      
       if (initialData) {
-        await axios.patch(`/api/${params.store_id}/sub-categories/${params.subcategory_id}`, data);
-      } else {
-        await axios.post(`/api/${params.store_id}/sub-categories`, data);
+        url = `/api/${params.store_id}/sub-categories/${params.subcategory_id || initialData.id}`;
+        method = 'PATCH';
       }
+  
+      console.log('Fetching URL:', url);
+  
+      await axios({
+        method: method,
+        url: url,
+        data: data,
+      });
+  
       router.refresh();
       router.push(`/${params.store_id}/sub-categories`);
       toast.success(toastMessage);
     } catch (error) {
-      toast.error('Something Went Wrong');
+      toast.error('Something went wrong');
+      console.log("Error onSubmit: ", error);
     } finally {
       setLoading(false);
     }
   };
-
+  
   const onDelete = async () => {
     try {
       setLoading(true);
@@ -134,7 +145,12 @@ const SubCategoryForm: React.FC<SubCategoryFormProps> = ({
 
   return (
     <>
-      <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
+      <AlertModal 
+        isOpen={open} 
+        onClose={() => setOpen(false)} 
+        onConfirm={onDelete} 
+        loading={loading} 
+      />
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
         {initialData && (

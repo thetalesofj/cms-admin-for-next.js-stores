@@ -11,8 +11,10 @@ export type ProductColumn = {
   brand: string;
   price: string;
   salesPrice?: string;
-  size: string;
+  sizeQuantities: { size: string; quantity: number }[];
   category: string;
+  subcategory: string;
+  style: string[];
   colour: string;
   is_featured: boolean;
   is_discounted: boolean;
@@ -48,6 +50,31 @@ export const columns: ColumnDef<ProductColumn>[] = [
         </Button>
       );
     },
+  },
+  {
+    accessorKey: "subcategory",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Sub-Category
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "style",
+    header: "Style(s)",
+    cell: ({ row }) => (
+      <ul>
+        {(row.original.style || []).map((style, index) => (
+          <li key={index}>{style}</li>
+        ))}
+      </ul>
+    ),
   },
   {
     accessorKey: "brand",
@@ -134,18 +161,28 @@ export const columns: ColumnDef<ProductColumn>[] = [
     },
   },
   {
-    accessorKey: "size",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Size
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    accessorKey: "sizeQuantities",
+    header: "Sizes",
+    cell: ({ row }) => (
+      <ul>
+        {row.original.sizeQuantities?.map((sq, index) => (
+          <li key={`${row.original.id}_size_${index}`}>{sq.size}</li>
+        ))}
+      </ul>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "sizeQuantities",
+    header: "Quantities",
+    cell: ({ row }) => (
+      <ul>
+        {row.original.sizeQuantities?.map((sq, index) => (
+          <li key={`${row.original.id}_quantity_${index}`}>{sq.quantity}</li>
+        ))}
+      </ul>
+    ),
+    enableSorting: false,
   },
   {
     accessorKey: "colour",

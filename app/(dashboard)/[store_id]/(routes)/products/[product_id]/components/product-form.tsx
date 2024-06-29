@@ -33,10 +33,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Category, Colour, Image, Product, Size, Brand } from "@prisma/client";
+import { Category, SubCategory, Colour, Image, Product, Size, Brand } from "@prisma/client";
 import axios from "axios";
-import { data } from "cypress/types/jquery";
-import { Plus, Trash } from "lucide-react";
+import { Plus, SquarePen, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,12 +46,15 @@ interface ProductFormProps {
   initialData:
     | (Product & {
         images: Image[];
+        style: string[];
       })
     | null;
   categories: Category[];
   colours: Colour[];
   sizes: Size[];
   brands: Brand[];
+  subcategories: SubCategory[];
+  styles: string[];
 }
 
 const formSchema = z.object({
@@ -61,8 +63,10 @@ const formSchema = z.object({
   price: z.coerce.number().min(1),
   discount_rate: z.coerce.number().optional(),
   quantity: z.coerce.number(),
-  size_id: z.string(),
+  size_id: z.string().optional(),
   category_id: z.string().min(1),
+  subcategory_id: z.string().min(1),
+  style: z.array(z.string().min(1)),
   colour_id: z.string().min(1),
   brand_id: z.string().min(1),
   is_featured: z.boolean().default(false).optional(),
@@ -77,17 +81,23 @@ type ProductFormValues = z.infer<typeof formSchema> & {
 const ProductForm: React.FC<ProductFormProps> = ({
   initialData,
   categories,
+  subcategories,
   colours,
   sizes,
+  styles,
   brands,
 }) => {
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sizeQuantities, setSizeQuantities] = useState<
-    { size_id: string; quantity: number }[]
-  >([]);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>(initialData?.style || []);
+  
+  const [sizeQuantities, setSizeQuantities] = useState<{ size_id: string; quantity: number }[]>([]);
+  const [sizeInput, setSizeInput] = useState("");
+  const [quantityInput, setQuantityInput] = useState(0);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+
 
   const title = initialData ? "Edit Product" : "Create Product";
   const description = initialData ? "Edit a Product" : "Add a New Product";
@@ -99,9 +109,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     defaultValues: initialData
       ? {
           ...initialData,
-          price: parseFloat(String(initialData?.price)),
-          discount_rate: parseFloat(String(initialData?.discount_rate)),
-          quantity: parseFloat(String(initialData?.discount_rate)),
+          price: parseFloat(String(initialData.price)),
+          discount_rate: parseFloat(String(initialData.discount_rate)),
+          quantity: parseFloat(String(initialData.quantity)),
+          style: initialData.style ? initialData.style : [],
         }
       : {
           name: "",
@@ -111,6 +122,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           quantity: 0,
           size_id: "",
           category_id: "",
+          subcategory_id: "",
+          style: [],
           colour_id: "",
           brand_id: "",
           is_featured: false,
@@ -119,19 +132,52 @@ const ProductForm: React.FC<ProductFormProps> = ({
         },
   });
 
-  const addSizeQuantity = () => {
-    form.handleSubmit(async (data) => {
+  const addOrUpdateSizeQuantity = () => {
+    form.handleSubmit((data) => {
       const { size_id, quantity } = data;
-      if (size_id && quantity) {
+  
+      if (editIndex !== null) {
+        const updatedSizeQuantities = [...sizeQuantities];
+        updatedSizeQuantities[editIndex] = { size_id, quantity };
+        setSizeQuantities(updatedSizeQuantities);
+        setEditIndex(null);
+      } else {
+        const isDuplicate = sizeQuantities.some((sq) => sq.size_id === size_id);
+        if (isDuplicate) {
+          toast.error('Size already exists');
+          return;
+        }
         setSizeQuantities((prev) => [...prev, { size_id, quantity }]);
-        form.setValue("size_id", "");
-        form.setValue("quantity", 0);
       }
+      
+      form.setValue("size_id", "");
+      form.setValue("quantity", 0);
     })();
   };
+  
+  const openEditSizeModal = (index: number) => {
+    const sizeQuantity = sizeQuantities[index];
+    form.setValue("size_id", sizeQuantity.size_id);
+    form.setValue("quantity", sizeQuantity.quantity);
+    setEditIndex(index);
+  };
+  
+  const openDeleteSizeModal = (index: number) => {
+    const updatedSizeQuantities = sizeQuantities.filter((_, i) => i !== index);
+    setSizeQuantities(updatedSizeQuantities);
+  }; 
 
-  const removeSizeQuantity = (index: number) => {
-    setSizeQuantities((prev) => prev.filter((_, i) => i !== index));
+  const addStyle = (style: string) => {
+    if (!selectedStyles.includes(style)) {
+      setSelectedStyles([...selectedStyles, style]);
+      form.setValue("style", [...selectedStyles, style]);
+    }
+  };
+  
+  const removeStyle = (style: string) => {
+    const updatedStyles = selectedStyles.filter(s => s !== style);
+    setSelectedStyles(updatedStyles);
+    form.setValue("style", updatedStyles);
   };
 
   const onSubmit = async (data: ProductFormValues) => {
@@ -155,10 +201,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
       toast.success(toastMessage);
     } catch (error) {
       console.error("API Error:", error);
-      if (error.response) {
-        console.error("API Error Response:", error.response.data);
-      }
-      toast.error("Something Went Wrong");
+      toast.error('Something went wrong');
+      console.log("Error onSubmit: ", error);
     } finally {
       setLoading(false);
     }
@@ -167,9 +211,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(
-        `/api/${params.store_id}/products/${params.product_id}`
-      );
+      await axios.delete(`/api/${params.store_id}/products/${params.product_id}`);
       router.refresh();
       router.push(`/${params.store_id}/products`);
       toast.success("Product Deleted.");
@@ -300,6 +342,70 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="subcategory_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sub-Category</FormLabel>
+                  <Select
+                    disabled={loading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          defaultValue={field.value}
+                          placeholder="Select a Sub-Category"
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {subcategories.map((subcategory) => (
+                        <SelectItem key={subcategory.id} value={subcategory.id}>
+                          {subcategory.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="style"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Style(s)</FormLabel>
+                  <Select
+                    disabled={loading}
+                    onValueChange={addStyle}
+                    value=""
+                    defaultValue=""
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          defaultValue={field.value}
+                          placeholder="Select Style(s)"
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {styles.map((style, index) => (
+                        <SelectItem key={index} value={style}>
+                          {style}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -478,34 +584,57 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="button" size="sm" onClick={addSizeQuantity}>
+              <Button type="button" size="sm" onClick={addOrUpdateSizeQuantity}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add
+                {editIndex !== null ? "Update" : "Add"}
               </Button>
             </div>
           </div>
+            <Table>
+              <TableCaption>A list of sizes and Inventory Available for the correlating category and sub-category</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sizes</TableHead>
+                  <TableHead>Inventory Available</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sizeQuantities.map((sq, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {sizes.find((size) => size.id === sq.size_id)?.name}
+                    </TableCell>
+                    <TableCell>{sq.quantity}</TableCell>
+                    <TableCell className="space-x-4">
+                      <Button variant="secondary" size="sm" type="button" onClick={() => openEditSizeModal(index)}>
+                        <SquarePen className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" type="button" onClick={() => openDeleteSizeModal(index)} disabled={loading}>
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           <Table>
-            <TableCaption>
-              A list of sizes with correlating quantities
-            </TableCaption>
+            <TableCaption>A list of selected styles</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Size</TableHead>
-                <TableHead>Quantity</TableHead>
+                <TableHead>Style</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sizeQuantities.map((sq, index) => (
+              {selectedStyles.map((style, index) => (
                 <TableRow key={index}>
-                  <TableCell>
-                    {sizes.find((size) => size.id === sq.size_id)?.name}
-                  </TableCell>
-                  <TableCell>{sq.quantity}</TableCell>
+                  <TableCell>{style}</TableCell>
                   <TableCell>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => removeSizeQuantity(index)}
+                      onClick={() => removeStyle(style)}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

@@ -7,6 +7,7 @@ export async function GET (
     { params } : { params: { subcategory_id: string } }
 ) {
     try {
+        console.log('GET request received for subcategory_id:', params.subcategory_id);
         if (!params.subcategory_id) {
             return new NextResponse("Sub-Category ID Required", { status : 400})
         }
@@ -16,6 +17,8 @@ export async function GET (
                 id: params.subcategory_id,
             }
         });
+
+        console.log('Sub-category retrieved:', subcategory);
 
         return NextResponse.json(subcategory)
         
@@ -45,8 +48,8 @@ export async function PATCH (
             where: {
                 id: params.store_id,
                 userId
-            }
-        })
+            },
+        });
 
         if (!storeByUserId) {
             return new NextResponse("Unauthorised", { status: 403 })
@@ -59,8 +62,8 @@ export async function PATCH (
             data: {
                 name,
                 styles
-            }
-        })
+            },
+        });
 
         return NextResponse.json(updatedSubCategory)
     } catch (error) {

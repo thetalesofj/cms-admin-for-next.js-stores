@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
@@ -40,9 +40,12 @@ export default function StoreSwitcher({
   className,
   items = [],
 }: StoreSwitcherProps) {
+  
   const storeModal = useStoreModal();
   const params = useParams();
   const router = useRouter();
+
+  const [open, setOpen] = useState(false);
 
   const formattedItems = items.map((item) => ({
     label: item.name,
@@ -53,9 +56,15 @@ export default function StoreSwitcher({
     (item) => item.value === params.store_id
   );
 
-  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    console.log("Current Store: ", currentStore);
+    console.log("Stores: ", items);
+    console.log("Formatted Stores: ", formattedItems);
+  }, [items, currentStore, formattedItems]);
+
 
   const onStoreSelect = (store: { value: string; label: string }) => {
+    console.log("Selected Store:", store)
     setOpen(false);
     router.push(`/${store.value}`);
   };
@@ -71,7 +80,7 @@ export default function StoreSwitcher({
           data-cy="store-button"
         >
           <StoreIcon className="mr-2 h-4 w-4" />
-          {currentStore?.label}
+          {currentStore?.label ?? "Select a Store"}
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -106,8 +115,10 @@ export default function StoreSwitcher({
             <CommandGroup>
               <CommandItem
                 onSelect={() => {
+                  console.log("Create Store button clicked");
                   setOpen(false);
                   storeModal.onOpen();
+                  console.log("Modal isOpen: ", storeModal.isOpen);
                 }}
                 data-cy="create-store-button"
               >

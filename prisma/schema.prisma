@@ -90,14 +90,15 @@ model Modal {
 }
 
 model Size {
-  id        String    @id @default(uuid())
-  store_id  String
-  name      String
-  value     String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  store     Store     @relation("StoreToSize", fields: [store_id], references: [id])
-  products  Product[]
+  id          String        @id @default(uuid())
+  store_id    String
+  name        String
+  value       String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  store       Store         @relation("StoreToSize", fields: [store_id], references: [id])
+  products    Product[]
+  productSize ProductSize[]
 
   @@index([store_id])
 }
@@ -127,40 +128,52 @@ model Colour {
   @@index([store_id])
 }
 
+model ProductSize {
+  id         String   @id @default(uuid())
+  product_id String
+  size_id    String
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [product_id], references: [id])
+  size       Size     @relation(fields: [size_id], references: [id])
+
+  @@index([product_id])
+  @@index([size_id])
+}
+
 model Product {
-  id             String      @id @default(uuid())
+  id             String        @id @default(uuid())
   store_id       String
   category_id    String
   subcategory_id String
-  style_id       String
-  size_id        String
   colour_id      String
   name           String
   price          Decimal
-  style          String
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  style          String[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   brand_id       String
-  discount_rate  Decimal
-  is_archived    Boolean     @default(false)
-  is_discounted  Boolean     @default(false)
-  is_featured    Boolean     @default(false)
-  store          Store       @relation("StoreToProduct", fields: [store_id], references: [id])
-  category       Category    @relation("CategoryToProduct", fields: [category_id], references: [id])
-  subCategory    SubCategory @relation("SubCategoryToProduct", fields: [subcategory_id], references: [id])
-  size           Size        @relation(fields: [size_id], references: [id])
-  colour         Colour      @relation(fields: [colour_id], references: [id])
-  brand          Brand       @relation(fields: [brand_id], references: [id])
+  discount_rate  Decimal?
+  is_archived    Boolean       @default(false)
+  is_discounted  Boolean       @default(false)
+  is_featured    Boolean       @default(false)
+  store          Store         @relation("StoreToProduct", fields: [store_id], references: [id])
+  category       Category      @relation("CategoryToProduct", fields: [category_id], references: [id])
+  subCategory    SubCategory   @relation("SubCategoryToProduct", fields: [subcategory_id], references: [id])
+  colour         Colour        @relation(fields: [colour_id], references: [id])
+  brand          Brand         @relation(fields: [brand_id], references: [id])
   images         Image[]
   orderItems     OrderItem[]
+  product_sizes  ProductSize[]
+  Size           Size?         @relation(fields: [sizeId], references: [id])
+  sizeId         String?
 
   @@index([store_id])
   @@index([category_id])
   @@index([subcategory_id])
-  @@index([style_id])
   @@index([colour_id])
   @@index([brand_id])
-  @@index([size_id])
 }
 
 model Image {
